@@ -37,6 +37,45 @@ router.post(
   validate(authValidator.registerSchema),
   authController.register
 );
+/**
+ * @swagger
+ * /auth/verify-otp:
+ *   post:
+ *     summary: Verify registration OTP
+ *     tags: [Auth]
+ */
+
+router.post(
+  "/verify-otp",
+  validate(authValidator.verifyOtpSchema),
+  authController.verifyOtp
+);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ */
+router.post(
+  "/login",
+  validate(authValidator.loginSchema),
+  authController.login
+);
+
+router.post("/forgot-password",
+ validate(authValidator.forgotSchema),
+ authController.forgotPassword
+);
+
+router.post("/reset-password",
+ validate(authValidator.resetSchema),
+ authController.resetPassword
+);
+
+
+
 
 module.exports = router;
 

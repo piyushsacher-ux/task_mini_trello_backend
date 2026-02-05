@@ -4,15 +4,12 @@ const register = async (req, res) => {
   try {
     const result = await authService.registerUser(req.body);
 
-    // TEMP: return OTP for testing (later replace with email)
     res.status(201).json({
       success: true,
-      message: "User registered. Verify OTP.",
-      data: {
-        userId: result.user._id,
-        otp: result.otp
-      }
+      message: "OTP sent to email",
+      verificationToken: result.verificationToken
     });
+
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -23,12 +20,16 @@ const register = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
   try {
-    await authService.verifyRegisterOtp(req.body);
+    await authService.verifyRegisterOtp({
+      userId: req.verifyUserId,
+      otp: req.body.otp
+    });
 
     res.json({
       success: true,
-      message: "Account verified successfully"
+      message: "Account verified"
     });
+
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -36,6 +37,7 @@ const verifyOtp = async (req, res) => {
     });
   }
 };
+
 
 const login = async (req, res) => {
   try {
@@ -43,31 +45,30 @@ const login = async (req, res) => {
 
     res.json({
       success: true,
-      token
+      token,
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };
 
-const forgotPassword = async (req,res)=>{
- const result = await authService.forgotPassword(req.body);
- res.json({ success:true, data:result });
+const forgotPassword = async (req, res) => {
+  const result = await authService.forgotPassword(req.body);
+  res.json({ success: true, data: result });
 };
 
-const resetPassword = async(req,res)=>{
- await authService.resetPassword(req.body);
- res.json({ success:true, message:"Password reset successful" });
+const resetPassword = async (req, res) => {
+  await authService.resetPassword(req.body);
+  res.json({ success: true, message: "Password reset successful" });
 };
-
 
 module.exports = {
   register,
   verifyOtp,
   login,
   forgotPassword,
-  resetPassword
+  resetPassword,
 };

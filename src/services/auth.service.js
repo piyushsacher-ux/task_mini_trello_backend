@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const { sendMail } = require("../utils");
 const { User, Otp } = require("../models");
 
 const registerUser = async ({ name, email, password }) => {
@@ -13,7 +14,7 @@ const registerUser = async ({ name, email, password }) => {
   const user = await User.create({
     name,
     email,
-    password: hash
+    password: hash,
   });
 
   // generate OTP
@@ -25,12 +26,21 @@ const registerUser = async ({ name, email, password }) => {
     userId: user._id,
     type: "register",
     otpHash,
-    expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 mins
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
   });
 
-  
+  const verificationToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "5m",
+  });
 
-  return { user, otp }; // otp only for now (email later)
+  await sendMail({
+    to: email,
+    subject: "Verify your account",
+    text: `Your OTP is ${otp}. Valid for 5 minutes.`,
+  });
+
+  return { verificationToken };
+
 };
 
 const verifyRegisterOtp = async ({ userId, otp }) => {
@@ -39,15 +49,14 @@ const verifyRegisterOtp = async ({ userId, otp }) => {
     type: "register"
   });
 
-  if (!otpDoc) throw new Error("OTP expired or not found");
+  if (!otpDoc) throw new Error("OTP expired");
 
-  const isMatch = await bcrypt.compare(otp, otpDoc.otpHash);
+  const valid = await bcrypt.compare(otp, otpDoc.otpHash);
 
-  if (!isMatch) throw new Error("Invalid OTP");
+  if (!valid) throw new Error("Invalid OTP");
 
   await User.findByIdAndUpdate(userId, { isVerified: true });
 
-  // delete OTP after successful verification
   await Otp.deleteOne({ _id: otpDoc._id });
 };
 
@@ -62,11 +71,9 @@ const loginUser = async ({ email, password }) => {
 
   if (!isMatch) throw new Error("Invalid credentials");
 
-  const token = jwt.sign(
-    { id: user._id },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 
   return token;
 };
@@ -83,12 +90,11 @@ const forgotPassword = async ({ email }) => {
     userId: user._id,
     type: "forgot",
     otpHash,
-    expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
   });
 
   return { userId: user._id, otp };
 };
-
 
 const resetPassword = async ({ userId, otp, newPassword }) => {
   const otpDoc = await Otp.findOne({ userId, type: "forgot" });
@@ -106,12 +112,10 @@ const resetPassword = async ({ userId, otp, newPassword }) => {
   await Otp.deleteOne({ _id: otpDoc._id });
 };
 
-
-
 module.exports = {
   registerUser,
   verifyRegisterOtp,
   loginUser,
   forgotPassword,
-  resetPassword
+  resetPassword,
 };

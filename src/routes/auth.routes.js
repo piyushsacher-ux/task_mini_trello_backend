@@ -3,6 +3,8 @@ const router = express.Router();
 const { authController } = require("../controllers");
 const { authValidator } = require("../validators");
 const { validate } = require("../middleware");
+const { verifyToken } = require("../middleware");
+
 
 /**
  * @swagger
@@ -45,8 +47,10 @@ router.post(
  *     tags: [Auth]
  */
 
+
 router.post(
   "/verify-otp",
+  verifyToken,
   validate(authValidator.verifyOtpSchema),
   authController.verifyOtp
 );
@@ -73,8 +77,6 @@ router.post("/reset-password",
  validate(authValidator.resetSchema),
  authController.resetPassword
 );
-
-
 
 
 module.exports = router;

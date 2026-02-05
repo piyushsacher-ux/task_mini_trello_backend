@@ -7,7 +7,6 @@ const registerSchema = Joi.object({
 });
 
 const verifyOtpSchema = Joi.object({
-  userId: Joi.string().required(),
   otp: Joi.string().length(6).required()
 });
 

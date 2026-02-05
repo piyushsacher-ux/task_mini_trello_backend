@@ -9,15 +9,30 @@ router.post(
   "/",
   authMiddleware,
   validate(projectValidator.createProjectSchema),
-  projectController.createProject
+  projectController.createProject,
 );
 
 router.get(
   "/",
   authMiddleware,
   validate(projectValidator.getProjectsSchema, "query"),
-  projectController.getMyProjects
+  projectController.getMyProjects,
 );
 
+router.put(
+  "/:projectId",
+  authMiddleware,
+  validate(projectValidator.projectIdParamSchema, "params"),
+  validate(projectValidator.updateProjectSchema),
+  projectController.updateProject
+);
+
+
+router.delete(
+  "/:projectId",
+  authMiddleware,
+  validate(projectValidator.deleteProjectSchema, "params"),
+  projectController.deleteProject,
+);
 
 module.exports = router;

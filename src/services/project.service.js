@@ -1,6 +1,9 @@
 const { Project, User } = require("../models");
 
-const createProject = async ({ name, description = "", admins = [], members = [] }, ownerId) => {
+const createProject = async (
+  { name, description = "", admins = [], members = [] },
+  ownerId,
+) => {
   if (!name || !name.trim()) {
     throw new Error("Project name is required");
   }
@@ -11,7 +14,7 @@ const createProject = async ({ name, description = "", admins = [], members = []
   const existing = await Project.findOne({
     owner: ownerId,
     nameLower: normalizedName,
-    isDeleted: false
+    isDeleted: false,
   });
 
   if (existing) {
@@ -19,8 +22,8 @@ const createProject = async ({ name, description = "", admins = [], members = []
   }
 
   // Remove owner from admins/members
-  admins = admins.filter(id => id.toString() !== ownerId.toString());
-  members = members.filter(id => id.toString() !== ownerId.toString());
+  admins = admins.filter((id) => id.toString() !== ownerId.toString());
+  members = members.filter((id) => id.toString() !== ownerId.toString());
 
   // Deduplicate ids
   admins = [...new Set(admins.map(String))];
@@ -34,7 +37,7 @@ const createProject = async ({ name, description = "", admins = [], members = []
     const count = await User.countDocuments({
       _id: { $in: allUserIds },
       isDeleted: false,
-      isVerified: true
+      isVerified: true,
     });
 
     if (count !== allUserIds.length) {
@@ -43,7 +46,7 @@ const createProject = async ({ name, description = "", admins = [], members = []
   }
 
   // Ensure admins are also members
-  admins.forEach(a => {
+  admins.forEach((a) => {
     if (!members.includes(a)) members.push(a);
   });
 
@@ -54,7 +57,7 @@ const createProject = async ({ name, description = "", admins = [], members = []
     description,
     owner: ownerId,
     admins,
-    members
+    members,
   });
 
   return project;
@@ -65,11 +68,7 @@ const getMyProjects = async (userId, { page, limit, search }) => {
 
   const filter = {
     isDeleted: false,
-    $or: [
-      { owner: userId },
-      { admins: userId },
-      { members: userId }
-    ]
+    $or: [{ owner: userId }, { admins: userId }, { members: userId }],
   };
 
   if (search) {
@@ -77,23 +76,77 @@ const getMyProjects = async (userId, { page, limit, search }) => {
   }
 
   const [projects, total] = await Promise.all([
-    Project.find(filter)
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }),
+    Project.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
 
-    Project.countDocuments(filter)
+    Project.countDocuments(filter),
   ]);
 
   return {
     projects,
     total,
     page,
-    limit
+    limit,
   };
 };
 
+const updateProject = async (projectId, userId, payload) => {
+  const project = await Project.findOne({
+    _id: projectId,
+    isDeleted: false,
+  });
+
+  if (!project) throw new Error("Project not found");
+
+  // Authorization
+  if (!project.owner.equals(userId) && !project.admins.includes(userId)) {
+    throw new Error("Not authorized");
+  }
+
+  if (payload.name) {
+    const normalized = payload.name.trim().toLowerCase();
+
+    const duplicate = await Project.findOne({
+      owner: project.owner,
+      nameLower: normalized,
+      isDeleted: false,
+      _id: { $ne: projectId },
+    });
+
+    if (duplicate) {
+      throw new Error("Project with same name already exists");
+    }
+
+    payload.name = payload.name.trim();
+    payload.nameLower = normalized;
+  }
+
+  return Project.findByIdAndUpdate(projectId, payload, { new: true });
+};
+
+const deleteProject = async (projectId, userId) => {
+  const project = await Project.findOne({
+    _id: projectId,
+    isDeleted: false
+  });
+
+  if (!project) throw new Error("Project not found");
+
+  // ONLY OWNER can delete
+  if (!project.owner.equals(userId)) {
+    throw new Error("Only owner can delete project");
+  }
+
+  project.isDeleted = true;
+  await project.save();
+
+  return;
+};
+
+
 module.exports = {
   createProject,
-  getMyProjects
+  getMyProjects,
+  updateProject,
+  deleteProject
 };
+

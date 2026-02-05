@@ -36,7 +36,51 @@ const getMyProjects = async (req, res) => {
     });
   }
 };
+
+const updateProject = async (req, res) => {
+  try {
+    const project = await projectService.updateProject(
+      req.params.projectId,
+      req.user._id,
+      req.body
+    );
+
+    res.json({
+      success: true,
+      data: project
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+const deleteProject = async (req, res) => {
+  try {
+    await projectService.deleteProject(
+      req.params.projectId,
+      req.user._id
+    );
+
+    res.json({
+      success: true,
+      message: "Project deleted successfully"
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+
 module.exports = {
   createProject,
-  getMyProjects
+  getMyProjects,
+  updateProject,
+  deleteProject
 };
+

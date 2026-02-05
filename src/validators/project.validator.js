@@ -22,9 +22,27 @@ const getProjectsSchema = Joi.object({
   search: Joi.string().allow("").optional()
 });
 
+const projectIdParamSchema = Joi.object({
+  projectId: Joi.string().hex().length(24).required()
+});
+
+
+const updateProjectSchema = Joi.object({
+  name: Joi.string().min(2).max(100).optional(),
+  description: Joi.string().allow("").optional()
+});
+
+const deleteProjectSchema = Joi.object({
+  projectId: Joi.string().hex().length(24).required()
+});
+
+
 
 module.exports = {
   createProjectSchema,
-  getProjectsSchema
+  getProjectsSchema,
+  projectIdParamSchema,
+  updateProjectSchema,
+  deleteProjectSchema
 };
 

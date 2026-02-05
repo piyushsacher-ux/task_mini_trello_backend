@@ -126,7 +126,7 @@ const updateProject = async (projectId, userId, payload) => {
 const deleteProject = async (projectId, userId) => {
   const project = await Project.findOne({
     _id: projectId,
-    isDeleted: false
+    isDeleted: false,
   });
 
   if (!project) throw new Error("Project not found");
@@ -142,11 +142,138 @@ const deleteProject = async (projectId, userId) => {
   return;
 };
 
+const addMembers = async (projectId, actorId, members) => {
+  const project = await Project.findOne({ _id: projectId, isDeleted: false });
+
+  if (!project) throw new Error("Project not found");
+
+  // owner or admin
+  if (!project.owner.equals(actorId) && !project.admins.includes(actorId)) {
+    throw new Error("Not authorized");
+  }
+
+  // validate users exist
+  const count = await User.countDocuments({
+    _id: { $in: members },
+    isDeleted: false,
+    isVerified: true,
+  });
+
+  if (count !== members.length) {
+    throw new Error("One or more users invalid");
+  }
+
+  members.forEach((id) => {
+    if (!project.members.includes(id)) {
+      project.members.push(id);
+    }
+  });
+
+  await project.save();
+
+  return project;
+};
+
+const removeMember = async (projectId, actorId, memberId) => {
+  const project = await Project.findOne({ _id: projectId, isDeleted: false });
+
+  if (!project) throw new Error("Project not found");
+
+  if (!project.owner.equals(actorId) && !project.admins.includes(actorId)) {
+    throw new Error("Not authorized");
+  }
+
+  if (project.owner.equals(memberId)) {
+    throw new Error("Cannot remove owner");
+  }
+
+  project.members = project.members.filter((id) => id.toString() !== memberId);
+  project.admins = project.admins.filter((id) => id.toString() !== memberId);
+
+  await project.save();
+  return project;
+};
+
+const addAdmins = async (projectId, actorId, admins) => {
+  const project = await Project.findOne({ _id: projectId, isDeleted: false });
+
+  if (!project) throw new Error("Project not found");
+
+  // ONLY OWNER
+  if (!project.owner.equals(actorId)) {
+    throw new Error("Only owner can add admins");
+  }
+
+  // validate users exist + verified
+  const count = await User.countDocuments({
+    _id: { $in: admins },
+    isDeleted: false,
+    isVerified: true,
+  });
+
+  if (count !== admins.length) {
+    throw new Error("One or more users invalid");
+  }
+
+  admins.forEach((id) => {
+    if (!project.admins.includes(id)) {
+      project.admins.push(id);
+    }
+
+    // admin must also be member
+    if (!project.members.includes(id)) {
+      project.members.push(id);
+    }
+  });
+
+  await project.save();
+  return project;
+};
+
+const removeAdmin = async (projectId, actorId, adminId) => {
+  const project = await Project.findOne({ _id: projectId, isDeleted: false });
+
+  if (!project) throw new Error("Project not found");
+
+  if (!project.owner.equals(actorId)) {
+    throw new Error("Only owner can remove admin");
+  }
+
+  project.admins = project.admins.filter((id) => id.toString() !== adminId);
+
+  await project.save();
+  return project;
+};
+
+const getProjectById = async (projectId, userId) => {
+  const project = await Project.findOne({
+    _id: projectId,
+    isDeleted: false
+  })
+    .populate("owner", "name email")
+    .populate("admins", "name email")
+    .populate("members", "name email");
+
+  if (!project) throw new Error("Project not found");
+
+  const isAllowed =
+    project.owner._id.equals(userId) ||
+    project.admins.some(a => a._id.equals(userId)) ||
+    project.members.some(m => m._id.equals(userId));
+
+  if (!isAllowed) throw new Error("Not authorized");
+
+  return project;
+};
 
 module.exports = {
   createProject,
   getMyProjects,
+  addAdmins,
   updateProject,
-  deleteProject
+  deleteProject,
+  addMembers,
+  removeMember,
+  removeAdmin,
+  getProjectById
 };
-

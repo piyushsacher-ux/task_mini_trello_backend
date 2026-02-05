@@ -76,11 +76,103 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const addMembers = async (req, res) => {
+  try {
+    const project = await projectService.addMembers(
+      req.params.projectId,
+      req.user._id,
+      req.body.members
+    );
+
+    res.json({
+      success: true,
+      data: project
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+const removeMember = async (req,res)=>{
+  try{
+    const project = await projectService.removeMember(
+      req.params.projectId,
+      req.user._id,
+      req.params.userId
+    );
+
+    res.json({ success:true, data:project });
+  }catch(err){
+    res.status(400).json({ success:false, message:err.message });
+  }
+};
+
+const addAdmins = async (req, res) => {
+  try {
+    const project = await projectService.addAdmins(
+      req.params.projectId,
+      req.user._id,
+      req.body.admins
+    );
+
+    res.json({
+      success: true,
+      data: project
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+const removeAdmin = async (req, res) => {
+  try {
+    const project = await projectService.removeAdmin(
+      req.params.projectId,
+      req.user._id,
+      req.params.userId
+    );
+
+    res.json({ success: true, data: project });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+const getProjectById = async (req, res) => {
+  try {
+    const project = await projectService.getProjectById(
+      req.params.projectId,
+      req.user._id
+    );
+
+    res.json({
+      success: true,
+      data: project
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
 
 module.exports = {
   createProject,
   getMyProjects,
+  addMembers,
   updateProject,
-  deleteProject
+  deleteProject,
+  removeMember,
+  addAdmins,
+  removeAdmin,
+  getProjectById
 };
 

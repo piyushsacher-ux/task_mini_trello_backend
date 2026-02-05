@@ -35,4 +35,44 @@ router.delete(
   projectController.deleteProject,
 );
 
+router.post(
+  "/:projectId/members",
+  authMiddleware,
+  validate(projectValidator.projectIdParamSchema, "params"),
+  validate(projectValidator.addMembersSchema),
+  projectController.addMembers
+);
+
+router.delete(
+  "/:projectId/members/:userId",
+  authMiddleware,
+  validate(projectValidator.removeMemberParamSchema,"params"),
+  projectController.removeMember
+);
+
+
+router.post(
+  "/:projectId/admins",
+  authMiddleware,
+  validate(projectValidator.projectIdParamSchema, "params"),
+  validate(projectValidator.addAdminsSchema),
+  projectController.addAdmins
+);
+
+router.delete(
+  "/:projectId/admins/:userId",
+  authMiddleware,
+  validate(projectValidator.removeMemberParamSchema, "params"),
+  projectController.removeAdmin
+);
+
+router.get(
+  "/:projectId",
+  authMiddleware,
+  validate(projectValidator.projectIdParamSchema, "params"),
+  projectController.getProjectById
+);
+
+
+
 module.exports = router;

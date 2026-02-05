@@ -37,12 +37,36 @@ const deleteProjectSchema = Joi.object({
 });
 
 
+const addMembersSchema = Joi.object({
+  members: Joi.array()
+    .items(Joi.string().hex().length(24))
+    .min(1)
+    .required()
+});
+
+
+const removeMemberParamSchema = Joi.object({
+  projectId: Joi.string().hex().length(24).required(),
+  userId: Joi.string().hex().length(24).required()
+});
+
+
+const addAdminsSchema = Joi.object({
+  admins: Joi.array()
+    .items(Joi.string().hex().length(24))
+    .min(1)
+    .required()
+});
+
 
 module.exports = {
   createProjectSchema,
   getProjectsSchema,
   projectIdParamSchema,
   updateProjectSchema,
-  deleteProjectSchema
+  deleteProjectSchema,
+  addMembersSchema,
+  removeMemberParamSchema,
+  addAdminsSchema
 };
 

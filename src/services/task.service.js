@@ -1,19 +1,21 @@
 const { Task, Project } = require("../models");
+const { ERROR_CODES, createError } = require("../errors");
+
 
 const createTask = async (projectId, userId, payload) => {
   const project = await Project.findOne({ _id: projectId, isDeleted: false });
 
-  if (!project) throw new Error("Project not found");
+  if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
   if (!project.owner.equals(userId) && !project.admins.includes(userId)) {
-    throw new Error("Not authorized");
+    throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
 
   const uniqueAssignees = [...new Set(payload.assignees)];
 
   const invalid = uniqueAssignees.some((id) => !project.members.includes(id));
 
-  if (invalid) throw new Error("User not part of project");
+  if (invalid) throw createError(ERROR_CODES.USER_NOT_ASSIGNED);
 
   const count = await User.countDocuments({
     _id: { $in: uniqueAssignees },
@@ -21,7 +23,7 @@ const createTask = async (projectId, userId, payload) => {
     isVerified: true,
   });
 
-  if (count !== uniqueAssignees.length) throw new Error("Invalid assignees");
+  if (count !== uniqueAssignees.length) throw createError(ERROR_CODES.INVALID_ASSIGNEES);
 
   const assignees = uniqueAssignees.map((id) => ({ user: id }));
 
@@ -44,14 +46,14 @@ const getTasks = async (projectId, userId, { page, limit, status, search }) => {
     isDeleted: false,
   });
 
-  if (!project) throw new Error("Project not found");
+  if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
   const allowed =
     project.owner.equals(userId) ||
     project.admins.includes(userId) ||
     project.members.includes(userId);
 
-  if (!allowed) throw new Error("Not authorized");
+  if (!allowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
 
   const filter = {
     projectId,
@@ -88,7 +90,7 @@ const selfCompleteTask = async (taskId, userId) => {
     isDeleted: false
   });
 
-  if (!task) throw new Error("Task not found");
+  if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
 
   // find this user inside assignees
   const assignee = task.assignees.find(
@@ -96,12 +98,12 @@ const selfCompleteTask = async (taskId, userId) => {
   );
 
   if (!assignee) {
-    throw new Error("You are not assigned to this task");
+    throw createError(ERROR_CODES.USER_NOT_ASSIGNED);
   }
 
   // already completed
   if (assignee.status === "done") {
-    throw new Error("Already completed");
+    throw createError(ERROR_CODES.ALREADY_COMPLETED);
   }
 
   assignee.status = "done";
@@ -123,9 +125,9 @@ const deleteTask = async (taskId, userId) => {
     isDeleted: false
   }).populate("projectId");
 
-  if (!task) throw new Error("Task not found");
+  if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
 
-  if (!task.projectId) throw new Error("Project not found");
+  if (!task.projectId) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
   const project = task.projectId;
 
@@ -134,7 +136,7 @@ const deleteTask = async (taskId, userId) => {
     project.admins.includes(userId) ||
     task.createdBy.equals(userId);
 
-  if (!allowed) throw new Error("Not authorized");
+  if (!allowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
 
   task.isDeleted = true;
   await task.save();

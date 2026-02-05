@@ -3,11 +3,12 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { sendMail } = require("../utils");
 const { User, Otp } = require("../models");
+const { ERROR_CODES, createError } = require("../errors");
 
 const registerUser = async ({ name, email, password }) => {
   const existing = await User.findOne({ email });
 
-  if (existing) throw new Error("User already exists");
+  if (existing) throw createError(ERROR_CODES.USER_ALREADY_EXISTS);
 
   const hash = await bcrypt.hash(password, 10);
 
@@ -49,11 +50,11 @@ const verifyRegisterOtp = async ({ userId, otp }) => {
     type: "register"
   });
 
-  if (!otpDoc) throw new Error("OTP expired");
+  if (!otpDoc) throw createError(ERROR_CODES.OTP_EXPIRED);
 
   const valid = await bcrypt.compare(otp, otpDoc.otpHash);
 
-  if (!valid) throw new Error("Invalid OTP");
+  if (!valid) throw createError(ERROR_CODES.INVALID_OTP);
 
   await User.findByIdAndUpdate(userId, { isVerified: true });
 
@@ -63,13 +64,13 @@ const verifyRegisterOtp = async ({ userId, otp }) => {
 const loginUser = async ({ email, password }) => {
   const user = await User.findOne({ email, isDeleted: false });
 
-  if (!user) throw new Error("Invalid credentials");
+  if (!user) throw createError(ERROR_CODES.INVALID_CREDENTIALS);
 
-  if (!user.isVerified) throw new Error("Please verify your account");
+  if (!user.isVerified) throw createError(ERROR_CODES.VERIFY_ACCOUNT);
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!isMatch) throw new Error("Invalid credentials");
+  if (!isMatch) throw createError(ERROR_CODES.INVALID_CREDENTIALS);
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
@@ -81,7 +82,7 @@ const loginUser = async ({ email, password }) => {
 const forgotPassword = async ({ email }) => {
   const user = await User.findOne({ email, isDeleted: false });
 
-  if (!user) throw new Error("User not found");
+  if (!user) throw createError(ERROR_CODES.USER_NOT_FOUND);
 
   const otp = crypto.randomInt(100000, 999999).toString();
   const otpHash = await bcrypt.hash(otp, 10);
@@ -99,11 +100,11 @@ const forgotPassword = async ({ email }) => {
 const resetPassword = async ({ userId, otp, newPassword }) => {
   const otpDoc = await Otp.findOne({ userId, type: "forgot" });
 
-  if (!otpDoc) throw new Error("OTP expired");
+  if (!otpDoc) throw createError(ERROR_CODES.OTP_EXPIRED);
 
   const valid = await bcrypt.compare(otp, otpDoc.otpHash);
 
-  if (!valid) throw new Error("Invalid OTP");
+  if (!valid) throw createError(ERROR_CODES.INVALID_OTP);
 
   const hash = await bcrypt.hash(newPassword, 10);
 

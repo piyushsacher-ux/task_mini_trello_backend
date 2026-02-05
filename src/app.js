@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
+const errorHandler = require("./errors/error.handler");
 const { connectDB } = require("./config");
 
 const app = express();
@@ -14,9 +15,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 require("./routes")(app);
 
-app.get("/", (req, res) => {
-  res.send("Task Manager API Running");
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 

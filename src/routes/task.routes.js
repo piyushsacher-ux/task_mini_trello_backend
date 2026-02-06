@@ -42,5 +42,19 @@ router.get(
   taskController.getMyTasks
 );
 
+router.get(
+  "/tasks/created",
+  authMiddleware,
+  validate(taskValidator.getTasksSchema, "query"),
+  taskController.getTasksCreatedByMe
+);
+
+router.post(
+  "/tasks/:taskId/assignees",
+  authMiddleware,
+  validate(taskValidator.addAssigneesSchema),
+  taskController.addAssignees
+);
+
 
 module.exports = router;

@@ -94,6 +94,44 @@ const getMyTasks = async (req, res, next) => {
   }
 };
 
+const getTasksCreatedByMe = async (req, res, next) => {
+  try {
+    const result = await taskService.getTasksCreatedByMe(
+      req.user._id,
+      req.query
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: result.tasks,
+      meta: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const addAssignees = async (req, res, next) => {
+  try {
+    const task = await taskService.addAssigneesToTask(
+      req.params.taskId,
+      req.user._id,
+      req.body.assignees
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: task
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 module.exports = {
@@ -101,5 +139,7 @@ module.exports = {
   getTasks,
   getMyTasks,
   selfCompleteTask,
-  deleteTask
+  deleteTask,
+  getTasksCreatedByMe,
+  addAssignees
 };

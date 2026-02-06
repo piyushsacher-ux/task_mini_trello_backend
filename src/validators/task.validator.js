@@ -23,10 +23,17 @@ const taskIdParamSchema = Joi.object({
   taskId: Joi.string().hex().length(24).required()
 });
 
+const addAssigneesSchema = Joi.object({
+  assignees: Joi.array()
+    .items(Joi.string().hex().length(24))
+    .min(1)
+    .required()
+});
 
 
 module.exports = {
   createTaskSchema,
   getTasksSchema,
-  taskIdParamSchema
+  taskIdParamSchema,
+  addAssigneesSchema
 };

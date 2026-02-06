@@ -25,6 +25,21 @@ const resetSchema = Joi.object({
   newPassword: Joi.string().min(6).required()
 });
 
+const searchUsersSchema = Joi.object({
+  q: Joi.string().trim().min(1).optional(),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10)
+});
+
 
 
 module.exports = {
@@ -32,5 +47,6 @@ module.exports = {
   verifyOtpSchema,
   loginSchema,
   forgotSchema,
-  resetSchema
+  resetSchema,
+  searchUsersSchema
 };

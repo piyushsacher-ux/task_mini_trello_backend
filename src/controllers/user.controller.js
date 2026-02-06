@@ -4,7 +4,7 @@ const { StatusCodes } = require("http-status-codes");
 
 const searchUsers = async (req, res, next) => {
   try {
-    const users = await userService.searchUsers(req.query.q || "");
+    const users = await userService.searchUsers(req.query.q || "", req.user._id);
 
     res.status(StatusCodes.OK).json({
       success: true,

@@ -1,7 +1,6 @@
 const { Task, Project } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
-
 const createTask = async (projectId, userId, payload) => {
   const project = await Project.findOne({ _id: projectId, isDeleted: false });
 
@@ -23,7 +22,8 @@ const createTask = async (projectId, userId, payload) => {
     isVerified: true,
   });
 
-  if (count !== uniqueAssignees.length) throw createError(ERROR_CODES.INVALID_ASSIGNEES);
+  if (count !== uniqueAssignees.length)
+    throw createError(ERROR_CODES.INVALID_ASSIGNEES);
 
   const assignees = uniqueAssignees.map((id) => ({ user: id }));
 
@@ -87,21 +87,39 @@ const getTasks = async (projectId, userId, { page, limit, status, search }) => {
 const selfCompleteTask = async (taskId, userId) => {
   const task = await Task.findOne({
     _id: taskId,
-    isDeleted: false
-  });
+    isDeleted: false,
+  }).populate("projectId");
 
   if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
 
-  // find this user inside assignees
+  const project = task.projectId;
+
+  const isOwner = project.owner.equals(userId);
+  const isAdmin = project.admins.includes(userId);
+
+  // try to find assignee
   const assignee = task.assignees.find(
-    a => a.user.toString() === userId.toString()
+    (a) => a.user.toString() === userId.toString(),
   );
 
-  if (!assignee) {
+  // if not assignee and not admin/owner → forbidden
+  if (!assignee && !isOwner && !isAdmin) {
     throw createError(ERROR_CODES.USER_NOT_ASSIGNED);
   }
 
-  // already completed
+  // if owner/admin but not assignee → force complete ALL
+  if (!assignee && (isOwner || isAdmin)) {
+    task.assignees.forEach((a) => {
+      a.status = "done";
+      a.completedAt = new Date();
+    });
+
+    task.status = "done";
+    await task.save();
+    return task;
+  }
+
+  // normal assignee flow
   if (assignee.status === "done") {
     throw createError(ERROR_CODES.ALREADY_COMPLETED);
   }
@@ -109,8 +127,7 @@ const selfCompleteTask = async (taskId, userId) => {
   assignee.status = "done";
   assignee.completedAt = new Date();
 
-  // recompute task status
-  const allDone = task.assignees.every(a => a.status === "done");
+  const allDone = task.assignees.every((a) => a.status === "done");
 
   task.status = allDone ? "done" : "in_progress";
 
@@ -122,7 +139,7 @@ const selfCompleteTask = async (taskId, userId) => {
 const deleteTask = async (taskId, userId) => {
   const task = await Task.findOne({
     _id: taskId,
-    isDeleted: false
+    isDeleted: false,
   }).populate("projectId");
 
   if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
@@ -149,7 +166,7 @@ const getMyTasks = async (userId, { page, limit, status, search }) => {
 
   const filter = {
     isDeleted: false,
-    "assignees.user": userId
+    "assignees.user": userId,
   };
 
   if (status) filter.status = status;
@@ -166,23 +183,118 @@ const getMyTasks = async (userId, { page, limit, status, search }) => {
       .populate("assignees.user", "name email")
       .populate("projectId", "name"),
 
-    Task.countDocuments(filter)
+    Task.countDocuments(filter),
   ]);
 
   return {
     tasks,
     total,
     page,
-    limit
+    limit,
   };
 };
 
+const getTasksCreatedByMe = async (
+  userId,
+  { page = 1, limit = 10, status, search },
+) => {
+  const skip = (page - 1) * limit;
 
+  const filter = {
+    isDeleted: false,
+    createdBy: userId,
+  };
+
+  if (status) filter.status = status;
+
+  if (search) {
+    filter.title = { $regex: search, $options: "i" };
+  }
+
+  const [tasks, total] = await Promise.all([
+    Task.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .populate("assignees.user", "name email")
+      .populate("projectId", "name"),
+
+    Task.countDocuments(filter),
+  ]);
+
+  return {
+    tasks,
+    total,
+    page,
+    limit,
+  };
+};
+
+const addAssigneesToTask = async (taskId, userId, assignees) => {
+  const task = await Task.findOne({
+    _id: taskId,
+    isDeleted: false,
+  }).populate("projectId");
+
+  if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
+
+  const project = task.projectId;
+
+  const isOwner = project.owner.equals(userId);
+  const isAdmin = project.admins.includes(userId);
+  const isCreator = task.createdBy.equals(userId);
+
+  if (!isOwner && !isAdmin && !isCreator) {
+    throw createError(ERROR_CODES.NOT_AUTHORIZED);
+  }
+
+  // Only allow users who are part of the project (members/admins/owner)
+  const allowedUsers = new Set([
+    project.owner.toString(),
+    ...project.admins.map((id) => id.toString()),
+    ...project.members.map((id) => id.toString()),
+  ]);
+
+  const invalid = assignees.find((id) => !allowedUsers.has(id.toString()));
+  if (invalid) {
+    throw createError(ERROR_CODES.INVALID_ASSIGNEES);
+  }
+
+  if (assignees.some((id) => id.toString() === userId.toString())) {
+    throw createError(ERROR_CODES.CANNOT_ASSIGN_SELF);
+  }
+
+  // Existing assignees
+  const existing = new Set(task.assignees.map((a) => a.user.toString()));
+
+  // Add only new ones
+  const toAdd = assignees
+    .filter((id) => !existing.has(id.toString()))
+    .map((id) => ({
+      user: id,
+      status: "todo",
+      assignedAt: new Date(),
+      completedAt: null,
+    }));
+
+  if (!toAdd.length) return task;
+
+  task.assignees.push(...toAdd);
+
+  if (task.status === "done") {
+    task.status = "in_progress";
+  }
+
+  await task.save();
+  return task;
+};
 
 module.exports = {
   createTask,
   getTasks,
   getMyTasks,
   selfCompleteTask,
-  deleteTask
+  getTasksCreatedByMe,
+  deleteTask,
+  addAssigneesToTask,
 };

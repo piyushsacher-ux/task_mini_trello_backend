@@ -6,8 +6,6 @@ const { User, Otp } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
 const registerUser = async ({ name, email, password }) => {
-  email = email.toLowerCase().trim();
-  name = name.toLowerCase().trim();
   const existing = await User.findOne({ email });
 
   if (existing) throw createError(ERROR_CODES.USER_ALREADY_EXISTS);

@@ -128,21 +128,31 @@ const updateProject = async (projectId, userId, payload) => {
 const deleteProject = async (projectId, userId) => {
   const project = await Project.findOne({
     _id: projectId,
-    isDeleted: false,
+    isDeleted: false
   });
 
-  if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
+  if (!project) {
+    throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
+  }
 
-  // ONLY OWNER can delete
+  // only owner can delete project
   if (!project.owner.equals(userId)) {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
 
+  // soft delete project
   project.isDeleted = true;
   await project.save();
 
-  return;
+  //soft delete all tasks under this project
+  await Task.updateMany(
+    { projectId },
+    { $set: { isDeleted: true } }
+  );
+
+  return true;
 };
+
 
 const addMembers = async (projectId, actorId, members) => {
   const project = await Project.findOne({ _id: projectId, isDeleted: false });

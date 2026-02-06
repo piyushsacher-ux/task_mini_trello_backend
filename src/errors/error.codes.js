@@ -100,4 +100,9 @@ module.exports = {
     message: "Username already exists",
     statusCode: StatusCodes.BAD_REQUEST,
   },
+
+  CANNOT_ASSIGN_SELF: {
+    message: "You cannot assign task to yourself",
+    statusCode: StatusCodes.BAD_REQUEST,
+  },
 };

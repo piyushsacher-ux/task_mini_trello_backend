@@ -1,7 +1,8 @@
 const { User } = require("../models");
 
-const searchUsers = async (query) => {
+const searchUsers = async (query, currentUserId) => {
   return User.find({
+    _id: { $ne: currentUserId },
     isDeleted: false,
     isVerified: true,
     $or: [

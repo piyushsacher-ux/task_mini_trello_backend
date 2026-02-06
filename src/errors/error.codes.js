@@ -57,7 +57,7 @@ module.exports = {
   },
 
   USER_NOT_ASSIGNED: {
-    message: "You are not assigned to this task",
+    message: "User are not assigned to this task",
     statusCode: StatusCodes.FORBIDDEN,
   },
 
@@ -107,8 +107,12 @@ module.exports = {
   },
 
   OTP_NOT_VERIFIED: {
-  message: "OTP not verified",
-  statusCode: StatusCodes.FORBIDDEN
-}
+    message: "OTP not verified",
+    statusCode: StatusCodes.FORBIDDEN,
+  },
 
+  CANNOT_REMOVE_LAST_ASSIGNEE: {
+    message: "Cannot remove the last assignee",
+    statusCode: StatusCodes.BAD_REQUEST,
+  },
 };

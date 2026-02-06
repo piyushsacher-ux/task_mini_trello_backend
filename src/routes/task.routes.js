@@ -56,5 +56,19 @@ router.post(
   taskController.addAssignees
 );
 
+router.delete(
+  "/tasks/:taskId/assignees/:userId",
+  authMiddleware,
+  validate(taskValidator.removeAssigneeSchema, "params"),
+  taskController.removeAssignee
+);
+
+router.patch(
+  "/tasks/:taskId",
+  authMiddleware,
+  validate(taskValidator.updateTaskSchema),
+  taskController.updateTask
+);
+
 
 module.exports = router;

@@ -66,6 +66,10 @@ const getTasks = async (projectId, userId, { page, limit, status, search }) => {
     filter.title = { $regex: search, $options: "i" };
   }
 
+  if (assignedTo) {
+    filter["assignees.user"] = assignedTo;
+  }
+
   const [tasks, total] = await Promise.all([
     Task.find(filter)
       .skip(skip)
@@ -289,6 +293,81 @@ const addAssigneesToTask = async (taskId, userId, assignees) => {
   return task;
 };
 
+const removeAssigneeFromTask = async (taskId, removerId, assigneeUserId) => {
+  const task = await Task.findOne({
+    _id: taskId,
+    isDeleted: false
+  }).populate("projectId");
+
+  if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
+
+  const project = task.projectId;
+
+  const isOwner = project.owner.equals(removerId);
+  const isAdmin = project.admins.includes(removerId);
+  const isCreator = task.createdBy.equals(removerId);
+
+  if (!isOwner && !isAdmin && !isCreator) {
+    throw createError(ERROR_CODES.NOT_AUTHORIZED);
+  }
+
+  // check assignee exists
+  const index = task.assignees.findIndex(
+    a => a.user.toString() === assigneeUserId.toString()
+  );
+
+  if (index === -1) {
+    throw createError(ERROR_CODES.USER_NOT_ASSIGNED);
+  }
+
+  // we are not removing last assignee
+  if (task.assignees.length === 1) {
+    throw createError(ERROR_CODES.CANNOT_REMOVE_LAST_ASSIGNEE);
+  }
+
+  // remove assignee
+  task.assignees.splice(index, 1);
+
+  // recompute status
+  const allDone = task.assignees.every(a => a.status === "done");
+  task.status = allDone ? "done" : "in_progress";
+
+  await task.save();
+  return task;
+};
+
+const updateTask = async (taskId, userId, payload) => {
+  const task = await Task.findOne({
+    _id: taskId,
+    isDeleted: false
+  }).populate("projectId");
+
+  if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
+
+  const project = task.projectId;
+
+  const allowed =
+    project.owner.equals(userId) ||
+    project.admins.includes(userId) ||
+    task.createdBy.equals(userId);
+
+  if (!allowed) {
+    throw createError(ERROR_CODES.NOT_AUTHORIZED);
+  }
+
+  // Only allow safe fields
+  const allowedFields = ["title", "description", "priority", "dueDate", "status"];
+
+  allowedFields.forEach(field => {
+    if (payload[field] !== undefined) {
+      task[field] = payload[field];
+    }
+  });
+
+  await task.save();
+  return task;
+};
+
 module.exports = {
   createTask,
   getTasks,
@@ -297,4 +376,6 @@ module.exports = {
   getTasksCreatedByMe,
   deleteTask,
   addAssigneesToTask,
+  removeAssigneeFromTask,
+  updateTask
 };

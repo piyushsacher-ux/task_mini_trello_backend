@@ -132,6 +132,40 @@ const addAssignees = async (req, res, next) => {
   }
 };
 
+const removeAssignee = async (req, res, next) => {
+  try {
+    const task = await taskService.removeAssigneeFromTask(
+      req.params.taskId,
+      req.user._id,
+      req.params.userId
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: task
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateTask = async (req, res, next) => {
+  try {
+    const task = await taskService.updateTask(
+      req.params.taskId,
+      req.user._id,
+      req.body
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: task
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 module.exports = {
@@ -141,5 +175,7 @@ module.exports = {
   selfCompleteTask,
   deleteTask,
   getTasksCreatedByMe,
-  addAssignees
+  addAssignees,
+  removeAssignee,
+  updateTask
 };

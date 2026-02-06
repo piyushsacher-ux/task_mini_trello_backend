@@ -1,5 +1,4 @@
 const ERROR_CODES = require("./error.codes");
-const MESSAGES=require("./error.messages")
 
 const createError = (error) => {
   return {
@@ -10,6 +9,5 @@ const createError = (error) => {
 
 module.exports = {
   ERROR_CODES,
-  createError,
-  MESSAGES
+  createError
 };

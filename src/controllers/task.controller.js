@@ -2,7 +2,7 @@ const { taskService } = require("../services");
 const { StatusCodes } = require("http-status-codes");
 
 
-const createTask = async (req, res) => {
+const createTask = async (req, res, next) => {
   try {
     const task = await taskService.createTask(
       req.params.projectId,
@@ -15,14 +15,11 @@ const createTask = async (req, res) => {
       data: task
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const getTasks = async (req, res) => {
+const getTasks = async (req, res, next) => {
   try {
     const result = await taskService.getTasks(
       req.params.projectId,
@@ -40,14 +37,11 @@ const getTasks = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const selfCompleteTask = async (req, res) => {
+const selfCompleteTask = async (req, res, next) => {
   try {
     const task = await taskService.selfCompleteTask(
       req.params.taskId,
@@ -59,14 +53,11 @@ const selfCompleteTask = async (req, res) => {
       data: task
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const deleteTask = async (req, res) => {
+const deleteTask = async (req, res, next) => {
   try {
     await taskService.deleteTask(
       req.params.taskId,
@@ -78,14 +69,11 @@ const deleteTask = async (req, res) => {
       message: "Task deleted"
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const getMyTasks = async (req, res) => {
+const getMyTasks = async (req, res, next) => {
   try {
     const result = await taskService.getMyTasks(
       req.user._id,
@@ -102,10 +90,7 @@ const getMyTasks = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 

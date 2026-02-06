@@ -84,6 +84,16 @@ module.exports = {
   ONE_OR_MORE_USER_INVALID: {
     message: "One or more users are invalid",
     statusCode: StatusCodes.BAD_REQUEST
-  }
+  },
+
+  VALIDATION_ERROR: {
+    message: "Validation error",
+    statusCode: StatusCodes.BAD_REQUEST
+  },
+
+  VERIFICATION_TOKEN_MISSING: {
+    message: "Verification token missing",
+    statusCode: StatusCodes.UNAUTHORIZED
+  },
 
 };

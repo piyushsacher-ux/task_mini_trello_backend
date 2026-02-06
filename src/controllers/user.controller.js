@@ -2,7 +2,7 @@ const { userService } = require("../services");
 const { StatusCodes } = require("http-status-codes");
 
 
-const searchUsers = async (req, res) => {
+const searchUsers = async (req, res, next) => {
   try {
     const users = await userService.searchUsers(req.query.q || "");
 
@@ -11,10 +11,7 @@ const searchUsers = async (req, res) => {
       data: users
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 

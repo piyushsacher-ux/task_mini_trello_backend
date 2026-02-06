@@ -1,16 +1,23 @@
 const jwt = require("jsonwebtoken");
 const { StatusCodes } = require("http-status-codes");
-const MESSAGES = require("../errors/error.messages");
+const { ERROR_CODES, createError } = require("../errors");
 
 const verifyToken = (req, res, next) => {
   try {
     const header = req.headers.authorization;
 
-    if (!header || !header.startsWith("Bearer ")) {
-      return res.status(StatusCodes.UNAUTHORIZED).json({ message: MESSAGES.VERIFICATION_TOKEN_MISSING });
+    if (!header) {
+      throw createError(ERROR_CODES.VERIFICATION_TOKEN_MISSING);
+    }
+
+    if (!header.startsWith("Bearer ")) {
+      throw createError(ERROR_CODES.INVALID_TOKEN);
     }
 
     const token = header.split(" ")[1];
+    if (!token) {
+      throw createError(ERROR_CODES.INVALID_TOKEN);
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -18,7 +25,7 @@ const verifyToken = (req, res, next) => {
 
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    next(err);
   }
 };
 

@@ -1,17 +1,24 @@
+const { ERROR_CODES, createError } = require("../errors");
+
 const validate = (schema, property = "body") => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req[property]);
+    try {
+      const { error, value } = schema.validate(req[property]);
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message
-      });
+      if (error) {
+        throw {
+          ...createError(ERROR_CODES.VALIDATION_ERROR),
+          message: error.details[0].message
+        };
+      }
+
+      // assign sanitized / defaulted values
+      req[property] = value;
+
+      next();
+    } catch (err) {
+      next(err);
     }
-
-    req[property] = value; // assign defaults (page/limit)
-
-    next();
   };
 };
 

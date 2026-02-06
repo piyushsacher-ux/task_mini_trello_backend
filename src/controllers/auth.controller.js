@@ -1,7 +1,7 @@
 const { authService } = require("../services");
 const { StatusCodes } = require("http-status-codes");
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const result = await authService.registerUser(req.body);
 
@@ -11,14 +11,11 @@ const register = async (req, res) => {
       verificationToken: result.verificationToken,
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+     next(err);
   }
 };
 
-const verifyOtp = async (req, res) => {
+const verifyOtp = async (req, res, next) => {
   try {
     await authService.verifyRegisterOtp({
       userId: req.verifyUserId,
@@ -30,14 +27,11 @@ const verifyOtp = async (req, res) => {
       message: "Account verified",
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const token = await authService.loginUser(req.body);
 
@@ -46,14 +40,11 @@ const login = async (req, res) => {
       token
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res, next) => {
   try {
     const result = await authService.forgotPassword(req.body);
 
@@ -62,14 +53,11 @@ const forgotPassword = async (req, res) => {
       data: result
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-const resetPassword = async (req, res) => {
+const resetPassword = async (req, res, next) => {
   try {
     await authService.resetPassword(req.body);
 
@@ -78,10 +66,7 @@ const resetPassword = async (req, res) => {
       message: "Password reset successful"
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 

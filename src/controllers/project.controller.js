@@ -1,7 +1,7 @@
 const { projectService } = require("../services");
 const { StatusCodes } = require("http-status-codes");
 
-const createProject = async (req, res) => {
+const createProject = async (req, res, next) => {
   try {
     const project = await projectService.createProject(req.body, req.user._id);
 
@@ -10,14 +10,11 @@ const createProject = async (req, res) => {
       data: project
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const getMyProjects = async (req, res) => {
+const getMyProjects = async (req, res, next) => {
   try {
     const result = await projectService.getMyProjects(req.user._id, req.query);
 
@@ -31,14 +28,11 @@ const getMyProjects = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const updateProject = async (req, res) => {
+const updateProject = async (req, res, next) => {
   try {
     const project = await projectService.updateProject(
       req.params.projectId,
@@ -51,14 +45,11 @@ const updateProject = async (req, res) => {
       data: project
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const deleteProject = async (req, res) => {
+const deleteProject = async (req, res, next) => {
   try {
     await projectService.deleteProject(
       req.params.projectId,
@@ -70,14 +61,11 @@ const deleteProject = async (req, res) => {
       message: "Project deleted successfully"
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const addMembers = async (req, res) => {
+const addMembers = async (req, res, next) => {
   try {
     const project = await projectService.addMembers(
       req.params.projectId,
@@ -90,15 +78,12 @@ const addMembers = async (req, res) => {
       data: project
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const removeMember = async (req,res)=>{
-  try{
+const removeMember = async (req, res, next) => {
+  try {
     const project = await projectService.removeMember(
       req.params.projectId,
       req.user._id,
@@ -107,11 +92,11 @@ const removeMember = async (req,res)=>{
 
     res.status(StatusCodes.OK).json({ success:true, data:project });
   }catch(err){
-    res.status(400).json({ success:false, message:err.message });
+    next(err);
   }
 };
 
-const addAdmins = async (req, res) => {
+const addAdmins = async (req, res, next) => {
   try {
     const project = await projectService.addAdmins(
       req.params.projectId,
@@ -124,14 +109,11 @@ const addAdmins = async (req, res) => {
       data: project
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 
-const removeAdmin = async (req, res) => {
+const removeAdmin = async (req, res, next) => {
   try {
     const project = await projectService.removeAdmin(
       req.params.projectId,
@@ -141,11 +123,11 @@ const removeAdmin = async (req, res) => {
 
     res.status(StatusCodes.OK).json({ success: true, data: project });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    next(err);
   }
 };
 
-const getProjectById = async (req, res) => {
+const getProjectById = async (req, res, next) => {
   try {
     const project = await projectService.getProjectById(
       req.params.projectId,
@@ -157,10 +139,7 @@ const getProjectById = async (req, res) => {
       data: project
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    next(err);
   }
 };
 

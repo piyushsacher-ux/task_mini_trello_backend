@@ -10,6 +10,13 @@ const registerUser = async ({ name, email, password }) => {
 
   if (existing) throw createError(ERROR_CODES.USER_ALREADY_EXISTS);
 
+  const existingUsername = await User.findOne({name, isDeleted: false });
+  if (existingUsername) {
+    throw createError(ERROR_CODES.USERNAME_ALREADY_EXISTS);
+  }
+
+
+
   const hash = await bcrypt.hash(password, 10);
 
   const user = await User.create({

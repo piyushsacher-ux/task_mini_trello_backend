@@ -3,4 +3,5 @@ module.exports = {
   Otp: require("./otp.model"),
   Project: require("./project.model"),
   Task: require("./task.model"),
+  TokenBlacklist: require("./tokenBlackList.model"),
 };

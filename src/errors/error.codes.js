@@ -105,4 +105,10 @@ module.exports = {
     message: "You cannot assign task to yourself",
     statusCode: StatusCodes.BAD_REQUEST,
   },
+
+  OTP_NOT_VERIFIED: {
+  message: "OTP not verified",
+  statusCode: StatusCodes.FORBIDDEN
+}
+
 };

@@ -2,9 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { authController } = require("../controllers");
 const { authValidator } = require("../validators");
-const { validate } = require("../middleware");
-const { verifyToken } = require("../middleware");
-
+const { validate,verifyToken,authMiddleware } = require("../middleware");
 
 /**
  * @swagger
@@ -37,7 +35,7 @@ const { verifyToken } = require("../middleware");
 router.post(
   "/register",
   validate(authValidator.registerSchema),
-  authController.register
+  authController.register,
 );
 /**
  * @swagger
@@ -47,12 +45,11 @@ router.post(
  *     tags: [Auth]
  */
 
-
 router.post(
   "/verify-otp",
   verifyToken,
   validate(authValidator.verifyOtpSchema),
-  authController.verifyOtp
+  authController.verifyOtp,
 );
 
 /**
@@ -65,19 +62,22 @@ router.post(
 router.post(
   "/login",
   validate(authValidator.loginSchema),
-  authController.login
+  authController.login,
 );
 
-router.post("/forgot-password",
- validate(authValidator.forgotSchema),
- authController.forgotPassword
+router.post(
+  "/forgot-password",
+  validate(authValidator.forgotSchema),
+  authController.forgotPassword,
 );
 
-router.post("/reset-password",
- validate(authValidator.resetSchema),
- authController.resetPassword
+router.post(
+  "/reset-password",
+  verifyToken,
+  validate(authValidator.resetPasswordSchema),
+  authController.resetPassword,
 );
 
+router.post("/logout", authMiddleware, authController.logout);
 
 module.exports = router;
-

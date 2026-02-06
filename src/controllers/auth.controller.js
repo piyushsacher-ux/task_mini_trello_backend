@@ -17,19 +17,21 @@ const register = async (req, res, next) => {
 
 const verifyOtp = async (req, res, next) => {
   try {
-    await authService.verifyRegisterOtp({
+    await authService.verifyOtp({
       userId: req.verifyUserId,
       otp: req.body.otp,
+      type: req.body.type
     });
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: "Account verified",
+      message: "OTP verified successfully"
     });
   } catch (err) {
     next(err);
   }
 };
+
 
 const login = async (req, res, next) => {
   try {
@@ -59,7 +61,10 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    await authService.resetPassword(req.body);
+    await authService.resetPassword({
+      userId: req.verifyUserId,
+      password: req.body.password
+    });
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -70,10 +75,28 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const logout = async (req, res, next) => {
+  try {
+    const header = req.headers.authorization;
+    const token = header.split(" ")[1];
+
+    await authService.logout(token);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 module.exports = {
   register,
   verifyOtp,
   login,
   forgotPassword,
   resetPassword,
+  logout
 };

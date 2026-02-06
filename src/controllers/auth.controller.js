@@ -1,19 +1,19 @@
 const { authService } = require("../services");
+const { StatusCodes } = require("http-status-codes");
 
 const register = async (req, res) => {
   try {
     const result = await authService.registerUser(req.body);
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       message: "OTP sent to email",
-      verificationToken: result.verificationToken
+      verificationToken: result.verificationToken,
     });
-
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };
@@ -22,30 +22,28 @@ const verifyOtp = async (req, res) => {
   try {
     await authService.verifyRegisterOtp({
       userId: req.verifyUserId,
-      otp: req.body.otp
+      otp: req.body.otp,
     });
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: "Account verified"
+      message: "Account verified",
     });
-
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };
-
 
 const login = async (req, res) => {
   try {
     const token = await authService.loginUser(req.body);
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      token,
+      token
     });
   } catch (err) {
     res.status(400).json({
@@ -56,13 +54,35 @@ const login = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
-  const result = await authService.forgotPassword(req.body);
-  res.json({ success: true, data: result });
+  try {
+    const result = await authService.forgotPassword(req.body);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: result
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
 const resetPassword = async (req, res) => {
-  await authService.resetPassword(req.body);
-  res.json({ success: true, message: "Password reset successful" });
+  try {
+    await authService.resetPassword(req.body);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Password reset successful"
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
 module.exports = {

@@ -1,10 +1,11 @@
 const { projectService } = require("../services");
+const { StatusCodes } = require("http-status-codes");
 
 const createProject = async (req, res) => {
   try {
     const project = await projectService.createProject(req.body, req.user._id);
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       data: project
     });
@@ -20,7 +21,7 @@ const getMyProjects = async (req, res) => {
   try {
     const result = await projectService.getMyProjects(req.user._id, req.query);
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: result.projects,
       meta: {
@@ -45,7 +46,7 @@ const updateProject = async (req, res) => {
       req.body
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: project
     });
@@ -64,7 +65,7 @@ const deleteProject = async (req, res) => {
       req.user._id
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: "Project deleted successfully"
     });
@@ -84,7 +85,7 @@ const addMembers = async (req, res) => {
       req.body.members
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: project
     });
@@ -104,7 +105,7 @@ const removeMember = async (req,res)=>{
       req.params.userId
     );
 
-    res.json({ success:true, data:project });
+    res.status(StatusCodes.OK).json({ success:true, data:project });
   }catch(err){
     res.status(400).json({ success:false, message:err.message });
   }
@@ -118,7 +119,7 @@ const addAdmins = async (req, res) => {
       req.body.admins
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: project
     });
@@ -138,7 +139,7 @@ const removeAdmin = async (req, res) => {
       req.params.userId
     );
 
-    res.json({ success: true, data: project });
+    res.status(StatusCodes.OK).json({ success: true, data: project });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -151,7 +152,7 @@ const getProjectById = async (req, res) => {
       req.user._id
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: project
     });

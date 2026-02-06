@@ -6,6 +6,16 @@ module.exports = {
     statusCode: StatusCodes.NOT_FOUND
   },
 
+  INVALID_TOKEN: {
+    message: "Invalid token",
+    statusCode: StatusCodes.UNAUTHORIZED
+  },
+
+  NO_TOKEN_PROVIDED: {
+    message: "No token provided",
+    statusCode: StatusCodes.UNAUTHORIZED
+  },
+
   INVALID_CREDENTIALS: {
     message: "Invalid credentials",
     statusCode: StatusCodes.UNAUTHORIZED

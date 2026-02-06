@@ -1,4 +1,6 @@
 const { taskService } = require("../services");
+const { StatusCodes } = require("http-status-codes");
+
 
 const createTask = async (req, res) => {
   try {
@@ -8,7 +10,7 @@ const createTask = async (req, res) => {
       req.body
     );
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       data: task
     });
@@ -28,7 +30,7 @@ const getTasks = async (req, res) => {
       req.query
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: result.tasks,
       meta: {
@@ -52,7 +54,7 @@ const selfCompleteTask = async (req, res) => {
       req.user._id
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: task
     });
@@ -71,7 +73,7 @@ const deleteTask = async (req, res) => {
       req.user._id
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: "Task deleted"
     });
@@ -90,7 +92,7 @@ const getMyTasks = async (req, res) => {
       req.query
     );
 
-    res.json({
+    res.status(StatusCodes.OK).json({
       success: true,
       data: result.tasks,
       meta: {

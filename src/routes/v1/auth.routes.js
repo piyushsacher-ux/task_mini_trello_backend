@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { authController } = require("../controllers");
-const { authValidator } = require("../validators");
-const { validate,verifyToken,authMiddleware } = require("../middleware");
+const { authController } = require("../../controllers");
+const { authValidator } = require("../../validators");
+const { validate,verifyToken,authMiddleware } = require("../../middleware");
 
 
 router.post(

@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
-const { taskController } = require("../controllers");
-const { authMiddleware, validate } = require("../middleware");
-const { taskValidator, projectValidator } = require("../validators");
+const { taskController } = require("../../controllers");
+const { authMiddleware, validate } = require("../../middleware");
+const { taskValidator, projectValidator } = require("../../validators");
 
 router.post(
   "/projects/:projectId/tasks",

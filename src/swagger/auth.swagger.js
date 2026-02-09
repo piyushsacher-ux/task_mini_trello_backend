@@ -1,241 +1,40 @@
-/**
- * @swagger
- * tags:
- *   - name: Auth
- *     description: Authentication and user account endpoints
- */
+> taskmanagerapi@1.0.0 dev
+> nodemon src/app.js
 
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Register new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Jane Doe"
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "jane@example.com"
- *               password:
- *                 type: string
- *                 example: "S3cureP@ssw0rd"
- *     responses:
- *       201:
- *         description: User registered successfully (verification token returned)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 verificationToken:
- *                   type: string
- *                   description: short-lived token used to verify OTP
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       400:
- *         description: Validation error or user already exists
- *       500:
- *         description: Server error
- */
+[nodemon] 3.1.11
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node src/app.js`
+[dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+node:internal/modules/cjs/loader:1413
+  throw err;
+  ^
 
-/**
- * @swagger
- * /auth/verify-otp:
- *   post:
- *     summary: Verify OTP for registration or password reset
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - otp
- *             properties:
- *               otp:
- *                 type: string
- *                 description: numeric OTP sent via email
- *                 example: "123456"
- *               type:
- *                 type: string
- *                 description: purpose of OTP (register | forgot)
- *                 example: "register"
- *     responses:
- *       200:
- *         description: OTP verified successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "OTP verified"
- *       400:
- *         description: Invalid OTP or expired
- *       401:
- *         description: Missing or invalid verification token
- */
+Error: Cannot find module '../controllers'
+Require stack:
+- /Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/v1/project.routes.js
+- /Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/v1/index.js
+- /Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/index.js
+- /Users/piyushsacher/Desktop/TaskManagerAPI/src/app.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1410:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1051:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1056:22)
+    at Module._load (node:internal/modules/cjs/loader:1219:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:238:24)
+    at Module.require (node:internal/modules/cjs/loader:1493:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.<anonymous> (/Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/v1/project.routes.js:4:31)
+    at Module._compile (node:internal/modules/cjs/loader:1738:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/v1/project.routes.js',
+    '/Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/v1/index.js',
+    '/Users/piyushsacher/Desktop/TaskManagerAPI/src/routes/index.js',
+    '/Users/piyushsacher/Desktop/TaskManagerAPI/src/app.js'
+  ]
+}
 
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "jane@example.com"
- *               password:
- *                 type: string
- *                 example: "S3cureP@ssw0rd"
- *     responses:
- *       200:
- *         description: Login success - returns auth token and user info
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   description: JWT to be used as Bearer token
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 user:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                       example: "60f7a3c2b4e9f12a34567890"
- *                     name:
- *                       type: string
- *                       example: "Jane Doe"
- *                     email:
- *                       type: string
- *                       example: "jane@example.com"
- *       400:
- *         description: Validation error
- *       401:
- *         description: Invalid credentials or user not verified
- */
-
-/**
- * @swagger
- * /auth/forgot-password:
- *   post:
- *     summary: Send forgot-password OTP to user's email (if account exists)
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "jane@example.com"
- *     responses:
- *       200:
- *         description: OTP sent (response does not reveal whether account exists)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "If an account exists, an OTP has been sent to the email"
- *       400:
- *         description: Validation error
- */
-
-/**
- * @swagger
- * /auth/reset-password:
- *   post:
- *     summary: Reset password using verification token (sent during forgot-password flow)
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - password
- *             properties:
- *               password:
- *                 type: string
- *                 description: New password
- *                 example: "NewS3cureP@ss"
- *     responses:
- *       200:
- *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Password has been reset"
- *       400:
- *         description: Validation error or invalid/expired token
- *       401:
- *         description: Missing or invalid verification token
- */
-
-/**
- * @swagger
- * /auth/logout:
- *   post:
- *     summary: Logout user (blacklist current token)
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Logged out"
- *       401:
- *         description: Missing or invalid token
- */
+Node.js v24.7.0
+[nodemon] app crashed - waiting for file changes before starting...

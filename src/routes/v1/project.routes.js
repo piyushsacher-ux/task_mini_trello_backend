@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
-const { projectController } = require("../controllers");
-const { authMiddleware, validate } = require("../middleware");
-const { projectValidator } = require("../validators");
+const { projectController } = require("../../controllers");
+const { authMiddleware, validate } = require("../../middleware");
+const { projectValidator } = require("../../validators");
 
 router.post(
   "/",
@@ -72,7 +72,6 @@ router.get(
   validate(projectValidator.projectIdParamSchema, "params"),
   projectController.getProjectById
 );
-
 
 
 module.exports = router;

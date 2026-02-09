@@ -1,4 +1,4 @@
-const { Task, Project } = require("../models");
+const { Task, Project, User} = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
 const createTask = async (projectId, userId, payload) => {
@@ -38,7 +38,7 @@ const createTask = async (projectId, userId, payload) => {
   return task;
 };
 
-const getTasks = async (projectId, userId, { page, limit, status, search }) => {
+const getTasks = async (projectId, userId, { page, limit, status, search,assignedTo}) => {
   const skip = (page - 1) * limit;
 
   const project = await Project.findOne({

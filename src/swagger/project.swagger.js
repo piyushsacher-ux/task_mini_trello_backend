@@ -181,7 +181,7 @@
 /**
  * @swagger
  * /projects/{projectId}:
- *   patch:
+ *   put:
  *     summary: Update project (owner or admins may be allowed depending on rules)
  *     tags: [Project]
  *     security:

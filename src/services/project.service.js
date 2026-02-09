@@ -1,6 +1,5 @@
-const { Project, User } = require("../models");
+const { Project, User, Task } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
-
 
 const createProject = async (
   { name, description = "", admins = [], members = [] },
@@ -20,7 +19,7 @@ const createProject = async (
   });
 
   if (existing) {
-    throw createError(ERROR_CODES.PROJECT_NAME_REQUIRED);
+    throw createError(ERROR_CODES.PROJECT_NAME_EXISTS);
   }
 
   // Remove owner from admins/members
@@ -128,7 +127,7 @@ const updateProject = async (projectId, userId, payload) => {
 const deleteProject = async (projectId, userId) => {
   const project = await Project.findOne({
     _id: projectId,
-    isDeleted: false
+    isDeleted: false,
   });
 
   if (!project) {
@@ -145,14 +144,10 @@ const deleteProject = async (projectId, userId) => {
   await project.save();
 
   //soft delete all tasks under this project
-  await Task.updateMany(
-    { projectId },
-    { $set: { isDeleted: true } }
-  );
+  await Task.updateMany({ projectId }, { $set: { isDeleted: true } });
 
   return true;
 };
-
 
 const addMembers = async (projectId, actorId, members) => {
   const project = await Project.findOne({ _id: projectId, isDeleted: false });
@@ -163,6 +158,8 @@ const addMembers = async (projectId, actorId, members) => {
   if (!project.owner.equals(actorId) && !project.admins.includes(actorId)) {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
+
+  members = [...new Set(members.map((id) => id.toString()))];
 
   // validate users exist
   const count = await User.countDocuments({
@@ -176,7 +173,9 @@ const addMembers = async (projectId, actorId, members) => {
   }
 
   members.forEach((id) => {
-    if (!project.members.includes(id)) {
+    const exists = project.members.some((m) => m.toString() === id.toString());
+
+    if (!exists) {
       project.members.push(id);
     }
   });
@@ -216,6 +215,8 @@ const addAdmins = async (projectId, actorId, admins) => {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
 
+  admins = [...new Set(admins.map((id) => id.toString()))];
+
   // validate users exist + verified
   const count = await User.countDocuments({
     _id: { $in: admins },
@@ -228,12 +229,16 @@ const addAdmins = async (projectId, actorId, admins) => {
   }
 
   admins.forEach((id) => {
-    if (!project.admins.includes(id)) {
+    const isAdmin = project.admins.some((a) => a.toString() === id);
+
+    if (!isAdmin) {
       project.admins.push(id);
     }
 
-    // admin must also be member
-    if (!project.members.includes(id)) {
+    //admin must also be member
+    const isMember = project.members.some((m) => m.toString() === id);
+
+    if (!isMember) {
       project.members.push(id);
     }
   });
@@ -260,7 +265,7 @@ const removeAdmin = async (projectId, actorId, adminId) => {
 const getProjectById = async (projectId, userId) => {
   const project = await Project.findOne({
     _id: projectId,
-    isDeleted: false
+    isDeleted: false,
   })
     .populate("owner", "name email")
     .populate("admins", "name email")
@@ -270,8 +275,8 @@ const getProjectById = async (projectId, userId) => {
 
   const isAllowed =
     project.owner._id.equals(userId) ||
-    project.admins.some(a => a._id.equals(userId)) ||
-    project.members.some(m => m._id.equals(userId));
+    project.admins.some((a) => a._id.equals(userId)) ||
+    project.members.some((m) => m._id.equals(userId));
 
   if (!isAllowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
 
@@ -287,5 +292,5 @@ module.exports = {
   addMembers,
   removeMember,
   removeAdmin,
-  getProjectById
+  getProjectById,
 };

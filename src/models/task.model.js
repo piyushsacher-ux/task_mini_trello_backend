@@ -5,26 +5,26 @@ const assigneeSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     status: {
       type: String,
       enum: ["todo", "done"],
-      default: "todo"
+      default: "todo",
     },
 
     assignedAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
 
     completedAt: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const taskSchema = new mongoose.Schema(
@@ -32,51 +32,63 @@ const taskSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     description: {
       type: String,
-      default: ""
+      default: "",
     },
 
     // Task belongs to one project
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
-      required: true
+      required: true,
     },
 
     // Multiple users with individual progress
     assignees: {
       type: [assigneeSchema],
-      required: true
+      required: true,
     },
 
     // Overall task status (derived from assignees)
     status: {
       type: String,
       enum: ["todo", "in_progress", "done"],
-      default: "todo"
+      default: "todo",
+    },
+
+    dueDate: {
+      type: Date,
+      required: true,
+    },
+
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+      required: true,
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     isDeleted: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
 
 taskSchema.index({ projectId: 1, isDeleted: 1 });
 taskSchema.index({ "assignees.user": 1 });
 taskSchema.index({ status: 1 });
+taskSchema.index({ dueDate: 1 });
 
 module.exports = mongoose.model("Task", taskSchema);

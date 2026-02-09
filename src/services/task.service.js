@@ -1,4 +1,4 @@
-const { Task, Project, User} = require("../models");
+const { Task, Project, User } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
 const createTask = async (projectId, userId, payload) => {
@@ -38,7 +38,22 @@ const createTask = async (projectId, userId, payload) => {
   return task;
 };
 
-const getTasks = async (projectId, userId, { page, limit, status, search,assignedTo}) => {
+const getTasks = async (
+  projectId,
+  userId,
+  {
+    page,
+    limit,
+    status,
+    search,
+    assignedTo,
+    priority,
+    dueBefore,
+    dueAfter,
+    sortBy,
+    order,
+  },
+) => {
   const skip = (page - 1) * limit;
 
   const project = await Project.findOne({
@@ -61,20 +76,28 @@ const getTasks = async (projectId, userId, { page, limit, status, search,assigne
   };
 
   if (status) filter.status = status;
-
+  if (priority) filter.priority = priority;
   if (search) {
     filter.title = { $regex: search, $options: "i" };
   }
-
   if (assignedTo) {
     filter["assignees.user"] = assignedTo;
   }
+  if (dueBefore || dueAfter) {
+    filter.dueDate = {};
+    if (dueBefore) filter.dueDate.$lte = dueBefore;
+    if (dueAfter) filter.dueDate.$gte = dueAfter;
+  }
+
+  const sort = {
+    [sortBy]: order === "asc" ? 1 : -1,
+  };
 
   const [tasks, total] = await Promise.all([
     Task.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 })
+      .sort(sort)
       .populate("assignees.user", "name email"),
 
     Task.countDocuments(filter),
@@ -296,7 +319,7 @@ const addAssigneesToTask = async (taskId, userId, assignees) => {
 const removeAssigneeFromTask = async (taskId, removerId, assigneeUserId) => {
   const task = await Task.findOne({
     _id: taskId,
-    isDeleted: false
+    isDeleted: false,
   }).populate("projectId");
 
   if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
@@ -313,7 +336,7 @@ const removeAssigneeFromTask = async (taskId, removerId, assigneeUserId) => {
 
   // check assignee exists
   const index = task.assignees.findIndex(
-    a => a.user.toString() === assigneeUserId.toString()
+    (a) => a.user.toString() === assigneeUserId.toString(),
   );
 
   if (index === -1) {
@@ -329,7 +352,7 @@ const removeAssigneeFromTask = async (taskId, removerId, assigneeUserId) => {
   task.assignees.splice(index, 1);
 
   // recompute status
-  const allDone = task.assignees.every(a => a.status === "done");
+  const allDone = task.assignees.every((a) => a.status === "done");
   task.status = allDone ? "done" : "in_progress";
 
   await task.save();
@@ -339,7 +362,7 @@ const removeAssigneeFromTask = async (taskId, removerId, assigneeUserId) => {
 const updateTask = async (taskId, userId, payload) => {
   const task = await Task.findOne({
     _id: taskId,
-    isDeleted: false
+    isDeleted: false,
   }).populate("projectId");
 
   if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
@@ -356,9 +379,15 @@ const updateTask = async (taskId, userId, payload) => {
   }
 
   // Only allow safe fields
-  const allowedFields = ["title", "description", "priority", "dueDate", "status"];
+  const allowedFields = [
+    "title",
+    "description",
+    "priority",
+    "dueDate",
+    "status",
+  ];
 
-  allowedFields.forEach(field => {
+  allowedFields.forEach((field) => {
     if (payload[field] !== undefined) {
       task[field] = payload[field];
     }
@@ -377,5 +406,5 @@ module.exports = {
   deleteTask,
   addAssigneesToTask,
   removeAssigneeFromTask,
-  updateTask
+  updateTask,
 };

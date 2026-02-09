@@ -2,38 +2,36 @@ const Joi = require("joi");
 
 const createTaskSchema = Joi.object({
   title: Joi.string().min(2).max(200).required(),
-
   description: Joi.string().allow("").optional(),
-
-  assignees: Joi.array()
-    .items(Joi.string().hex().length(24))
-    .min(1)
-    .required()
+  assignees: Joi.array().items(Joi.string().hex().length(24)).min(1).required(),
+  dueDate: Joi.date().greater("now").required(),
+  priority: Joi.string().valid("low", "medium", "high").default("medium"),
 });
-
 
 const getTasksSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(50).default(10),
   status: Joi.string().valid("todo", "in_progress", "done").optional(),
+  priority: Joi.string().valid("low", "medium", "high").optional(),
   assignedTo: Joi.string().hex().length(24).optional(),
-  search: Joi.string().allow("").optional()
+  search: Joi.string().allow("").optional(),
+  dueBefore: Joi.date().optional(),
+  dueAfter: Joi.date().optional(),
+  sortBy: Joi.string().valid("dueDate", "priority", "createdAt").default("createdAt"),
+  order: Joi.string().valid("asc", "desc").default("desc")
 });
 
 const taskIdParamSchema = Joi.object({
-  taskId: Joi.string().hex().length(24).required()
+  taskId: Joi.string().hex().length(24).required(),
 });
 
 const addAssigneesSchema = Joi.object({
-  assignees: Joi.array()
-    .items(Joi.string().hex().length(24))
-    .min(1)
-    .required()
+  assignees: Joi.array().items(Joi.string().hex().length(24)).min(1).required(),
 });
 
 const removeAssigneeSchema = Joi.object({
   taskId: Joi.string().hex().length(24).required(),
-  userId: Joi.string().hex().length(24).required()
+  userId: Joi.string().hex().length(24).required(),
 });
 
 const updateTaskSchema = Joi.object({
@@ -41,7 +39,7 @@ const updateTaskSchema = Joi.object({
   description: Joi.string().trim().optional(),
   priority: Joi.string().valid("low", "medium", "high").optional(),
   dueDate: Joi.date().optional(),
-  status: Joi.string().valid("todo", "in_progress", "done").optional()
+  status: Joi.string().valid("todo", "in_progress", "done").optional(),
 }).min(1);
 
 module.exports = {
@@ -50,5 +48,5 @@ module.exports = {
   taskIdParamSchema,
   addAssigneesSchema,
   removeAssigneeSchema,
-  updateTaskSchema
+  updateTaskSchema,
 };

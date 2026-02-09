@@ -14,7 +14,6 @@ app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 require("./routes")(app);
-
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;

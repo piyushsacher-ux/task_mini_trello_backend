@@ -1,5 +1,5 @@
 const swaggerJsdoc = require("swagger-jsdoc");
-
+const path = require("path");
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -30,7 +30,7 @@ const options = {
     ],
   },
 
-  apis: ["./src/swagger/*.js"],
+  apis: [path.join(__dirname, "swagger/*.js")],
 };
 
 module.exports = swaggerJsdoc(options);

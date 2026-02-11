@@ -52,6 +52,7 @@ router.get(
 router.post(
   "/tasks/:taskId/assignees",
   authMiddleware,
+  validate(taskValidator.taskIdParamSchema, "params"),
   validate(taskValidator.addAssigneesSchema),
   taskController.addAssignees
 );
@@ -66,6 +67,7 @@ router.delete(
 router.patch(
   "/tasks/:taskId",
   authMiddleware,
+  validate(taskValidator.taskIdParamSchema, "params"),
   validate(taskValidator.updateTaskSchema),
   taskController.updateTask
 );

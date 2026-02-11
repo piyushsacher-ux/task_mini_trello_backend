@@ -28,8 +28,8 @@ const projectIdParamSchema = Joi.object({
 
 
 const updateProjectSchema = Joi.object({
-  name: Joi.string().min(2).max(100).optional(),
-  description: Joi.string().allow("").optional()
+  name: Joi.string().min(2).max(30).optional(),
+  description: Joi.string().min(2).max(50).allow("").optional()
 });
 
 const deleteProjectSchema = Joi.object({

@@ -115,4 +115,9 @@ module.exports = {
     message: "Cannot remove the last assignee",
     statusCode: StatusCodes.BAD_REQUEST,
   },
+
+  OTP_NOT_FOUND: {
+    message: "OTP not found",
+    statusCode: StatusCodes.NOT_FOUND,
+  }
 };

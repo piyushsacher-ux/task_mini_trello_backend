@@ -34,7 +34,7 @@
  *                 example: "S3cureP@ssw0rd"
  *     responses:
  *       201:
- *         description: User registered successfully (verification token returned)
+ *         description: OTP sent to user's email
  *         content:
  *           application/json:
  *             schema:
@@ -46,6 +46,7 @@
  *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
  *         description: Validation error or user already exists
+ *        
  *       500:
  *         description: Server error
  */
@@ -55,6 +56,7 @@
  * /auth/verify-otp:
  *   post:
  *     summary: Verify OTP for registration or password reset
+ *     description: Verifies a 6-digit OTP sent to the user's email and validates it before updating user status.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -66,6 +68,7 @@
  *             type: object
  *             required:
  *               - otp
+ *               - type
  *             properties:
  *               otp:
  *                 type: string
@@ -74,6 +77,7 @@
  *               type:
  *                 type: string
  *                 description: purpose of OTP (register | forgot)
+ *                 enum: [register, forgot]
  *                 example: "register"
  *     responses:
  *       200:
@@ -90,6 +94,10 @@
  *         description: Invalid OTP or expired
  *       401:
  *         description: Missing or invalid verification token
+ *       404:
+ *         description: OTP not found
+ *       500:
+ *         description: Internal server error
  */
 
 /**
@@ -97,6 +105,9 @@
  * /auth/login:
  *   post:
  *     summary: Login user
+ *     description: |
+ *           Authenticates a verified user using email and password.
+ *           Returns a JWT token valid for 1 day.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -117,28 +128,19 @@
  *                 example: "S3cureP@ssw0rd"
  *     responses:
  *       200:
- *         description: Login success - returns auth token and user info
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 token:
  *                   type: string
  *                   description: JWT to be used as Bearer token
  *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 user:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                       example: "60f7a3c2b4e9f12a34567890"
- *                     name:
- *                       type: string
- *                       example: "Jane Doe"
- *                     email:
- *                       type: string
- *                       example: "jane@example.com"
  *       400:
  *         description: Validation error
  *       401:
@@ -150,6 +152,12 @@
  * /auth/forgot-password:
  *   post:
  *     summary: Send forgot-password OTP to user's email (if account exists)
+ *     description: |
+ *           Generates a 6-digit OTP for password reset.
+ *           - Deletes previous forgot OTPs
+ *           - Stores hashed OTP in database
+ *           - Sends OTP to user's email
+ *           - Returns short-lived verification token (5 minutes)
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -166,17 +174,28 @@
  *                 example: "jane@example.com"
  *     responses:
  *       200:
- *         description: OTP sent (response does not reveal whether account exists)
+ *         description: OTP sent successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 message:
- *                   type: string
- *                   example: "If an account exists, an OTP has been sent to the email"
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     verificationToken:
+ *                       type: string
+ *                       description: Short-lived token used to verify OTP
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *       400:
  *         description: Validation error
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 
 /**
@@ -184,6 +203,12 @@
  * /auth/reset-password:
  *   post:
  *     summary: Reset password using verification token (sent during forgot-password flow)
+ *     description: |
+ *           Resets user password after successful OTP verification.
+ *           - Requires short-lived verification token (from forgot-password flow)
+ *           - Requires OTP to be verified first
+ *           - Hashes new password before storing
+ *           - Clears forgotOtpVerified flag after reset
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -198,6 +223,7 @@
  *             properties:
  *               password:
  *                 type: string
+ *                 minLength: 6
  *                 description: New password
  *                 example: "NewS3cureP@ss"
  *     responses:
@@ -208,20 +234,30 @@
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Password has been reset"
+ *                   example: "Password reset successful"
  *       400:
  *         description: Validation error or invalid/expired token
  *       401:
  *         description: Missing or invalid verification token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 
 /**
  * @swagger
  * /auth/logout:
  *   post:
- *     summary: Logout user (blacklist current token)
+ *     summary: Logout user (blacklist current JWT)
+ *     description: |
+ *         Logs out the authenticated user by blacklisting the current JWT token.
+ *         The token remains invalid until its natural expiration time.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -233,9 +269,14 @@
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Logged out"
+ *                   example: "Logged out successfully"
  *       401:
  *         description: Missing or invalid token
+ *       500:
+ *         description: Internal server error
  */

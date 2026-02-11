@@ -33,6 +33,8 @@ const createTask = async (projectId, userId, payload) => {
     projectId,
     assignees,
     createdBy: userId,
+    priority: payload.priority,
+    dueDate: payload.dueDate,
   });
 
   return task;
@@ -188,7 +190,20 @@ const deleteTask = async (taskId, userId) => {
   return task;
 };
 
-const getMyTasks = async (userId, { page, limit, status, search }) => {
+const getMyTasks = async (
+  userId,
+  {
+    page,
+    limit,
+    status,
+    search,
+    priority,
+    dueBefore,
+    dueAfter,
+    sortBy,
+    order,
+  },
+) => {
   const skip = (page - 1) * limit;
 
   const filter = {
@@ -197,6 +212,15 @@ const getMyTasks = async (userId, { page, limit, status, search }) => {
   };
 
   if (status) filter.status = status;
+  if (priority) filter.priority = priority;
+  if (dueBefore || dueAfter) {
+    filter.dueDate = {};
+    if (dueBefore) filter.dueDate.$lte = dueBefore;
+    if (dueAfter) filter.dueDate.$gte = dueAfter;
+  }
+  const sort = {
+    [sortBy]: order === "asc" ? 1 : -1,
+  };
 
   if (search) {
     filter.title = { $regex: search, $options: "i" };
@@ -206,7 +230,7 @@ const getMyTasks = async (userId, { page, limit, status, search }) => {
     Task.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 })
+      .sort(sort)
       .populate("assignees.user", "name email")
       .populate("projectId", "name"),
 

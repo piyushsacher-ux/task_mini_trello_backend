@@ -39,11 +39,11 @@ const registerUser = async ({ name, email, password }) => {
     expiresIn: "5m",
   });
 
-  await sendMail({
-    to: email,
-    subject: "Verify your account",
-    text: `Your OTP is ${otp}. Valid for 5 minutes.`,
-  });
+  // await sendMail({
+  //   to: email,
+  //   subject: "Verify your account",
+  //   text: `Your OTP is ${otp}. Valid for 5 minutes.`,
+  // });
 
   return { verificationToken };
 };

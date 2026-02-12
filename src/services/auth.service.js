@@ -8,13 +8,36 @@ const { ERROR_CODES, createError } = require("../errors");
 const registerUser = async ({ name, email, password }) => {
   const existing = await User.findOne({ email });
 
-  if (existing) throw createError(ERROR_CODES.USER_ALREADY_EXISTS);
+  if (existing) {
+    if (existing.isVerified) {
+      throw createError(ERROR_CODES.USER_ALREADY_EXISTS);
+    }
 
-  const existingUsername = await User.findOne({ name, isDeleted: false });
-  if (existingUsername) {
-    throw createError(ERROR_CODES.USERNAME_ALREADY_EXISTS);
+    // User exists but not verified → resend OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    await Otp.deleteMany({
+      userId: existing._id,
+      type: "register",
+    });
+
+    await Otp.create({
+      userId: existing._id,
+      type: "register",
+      otpHash,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    const verificationToken = jwt.sign(
+      { id: existing._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "5m" }
+    );
+
+    return { verificationToken };
   }
-
+  // flow for new user
   const hash = await bcrypt.hash(password, 10);
 
   const user = await User.create({

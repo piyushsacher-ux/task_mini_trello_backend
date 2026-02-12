@@ -119,5 +119,10 @@ module.exports = {
   OTP_NOT_FOUND: {
     message: "OTP not found",
     statusCode: StatusCodes.NOT_FOUND,
-  }
+  },
+
+  TOO_MANY_REQUESTS: {
+    message: "Too many requests. Please try again later.",
+    statusCode: StatusCodes.TOO_MANY_REQUESTS,
+  },
 };

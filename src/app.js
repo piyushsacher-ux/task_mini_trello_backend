@@ -5,11 +5,13 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 const errorHandler = require("./errors/error.handler");
 const { connectDB } = require("./config");
+const rateLimiter = require("./middleware").rateLimiter;
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(rateLimiter.globalLimiter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

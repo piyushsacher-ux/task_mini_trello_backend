@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { authController } = require("../../controllers");
 const { authValidator } = require("../../validators");
-const { validate,verifyToken,authMiddleware } = require("../../middleware");
+const { validate,verifyToken,authMiddleware,rateLimiter} = require("../../middleware");
 
 
 router.post(
@@ -22,12 +22,14 @@ router.post(
 
 router.post(
   "/login",
+  rateLimiter.authLimiter,
   validate(authValidator.loginSchema),
   authController.login,
 );
 
 router.post(
   "/forgot-password",
+  rateLimiter.authLimiter,
   validate(authValidator.forgotSchema),
   authController.forgotPassword,
 );

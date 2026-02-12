@@ -1,5 +1,6 @@
 module.exports = {
   validate: require("./validate.middleware"),
   authMiddleware: require("./auth.middleware"),
-  verifyToken: require("./verifyToken.middleware")
+  verifyToken: require("./verifyToken.middleware"),
+  rateLimiter: require("./rateLimiter.middleware")
 };

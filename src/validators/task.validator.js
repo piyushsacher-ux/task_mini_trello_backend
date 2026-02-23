@@ -42,6 +42,11 @@ const updateTaskSchema = Joi.object({
   status: Joi.string().valid("todo", "in_progress", "done").optional(),
 }).min(1);
 
+const getTaskByIdParamSchema = Joi.object({
+  projectId: Joi.string().hex().length(24).required(),
+  taskId: Joi.string().hex().length(24).required(),
+});
+
 module.exports = {
   createTaskSchema,
   getTasksSchema,
@@ -49,4 +54,5 @@ module.exports = {
   addAssigneesSchema,
   removeAssigneeSchema,
   updateTaskSchema,
+  getTaskByIdParamSchema
 };

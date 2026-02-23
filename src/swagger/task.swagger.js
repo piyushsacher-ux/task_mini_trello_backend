@@ -505,6 +505,63 @@
 
 /**
  * @swagger
+ * /projects/{projectId}/tasks/{taskId}:
+ *   get:
+ *     summary: Get a specific task of a project
+ *     description: |
+ *       Retrieves details of a specific task belonging to a project.
+ *
+ *       Access allowed to:
+ *       - Project owner
+ *       - Project admins
+ *       - Project members
+ *     tags:
+ *       - Task
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 60f7b4d5e1a2b34c567890ab
+ *         description: Unique project identifier
+ *
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 60f7b4d5e1a2b34c567890cd
+ *         description: Unique task identifier
+ *
+ *     responses:
+ *       200:
+ *         description: Task fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Task'
+ *
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Not authorized to access task
+ *       404:
+ *         description: Task or project not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /tasks/{taskId}/assignees/{userId}:
  *   delete:
  *     summary: Remove an assignee from a task

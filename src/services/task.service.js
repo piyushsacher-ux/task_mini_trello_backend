@@ -1,5 +1,6 @@
 const { Task, Project, User } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
+const mongoose = require("mongoose");
 
 const createTask = async (projectId, userId, payload) => {
   const project = await Project.findOne({ _id: projectId, isDeleted: false });
@@ -421,6 +422,50 @@ const updateTask = async (taskId, userId, payload) => {
   return task;
 };
 
+const getTaskById = async (projectId, taskId, userId) => {
+  
+  const projectObjectId = new mongoose.Types.ObjectId(projectId);
+  const taskObjectId = new mongoose.Types.ObjectId(taskId);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  
+  const project = await Project.findOne({
+    _id: projectObjectId,
+    isDeleted: false,
+  });
+
+  if (!project) {
+    throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
+  }
+
+  
+  const isOwner = project.owner.equals(userObjectId);
+
+  const isAdmin = project.admins?.some((id) =>
+    id.equals(userObjectId)
+  );
+
+  const isMember = project.members?.some((id) =>
+    id.equals(userObjectId)
+  );
+
+  if (!isOwner && !isAdmin && !isMember) {
+    throw createError(ERROR_CODES.NOT_AUTHORIZED);
+  }
+
+  const task = await Task.findOne({
+    _id: taskObjectId,
+    projectId: projectObjectId,
+    isDeleted: false,
+  }).populate("assignees.user", "name email");
+
+  if (!task) {
+    throw createError(ERROR_CODES.TASK_NOT_FOUND);
+  }
+
+  return task;
+};
+
 module.exports = {
   createTask,
   getTasks,
@@ -431,4 +476,5 @@ module.exports = {
   addAssigneesToTask,
   removeAssigneeFromTask,
   updateTask,
+  getTaskById
 };

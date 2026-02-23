@@ -166,7 +166,22 @@ const updateTask = async (req, res, next) => {
   }
 };
 
+const getTaskById = async (req, res, next) => {
+  try {
+    const task = await taskService.getTaskById(
+      req.params.projectId,
+      req.params.taskId,
+      req.user._id
+    );
 
+    res.status(200).json({
+      success: true,
+      data: task,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 module.exports = {
   createTask,
@@ -177,5 +192,6 @@ module.exports = {
   getTasksCreatedByMe,
   addAssignees,
   removeAssignee,
-  updateTask
+  updateTask,
+  getTaskById
 };

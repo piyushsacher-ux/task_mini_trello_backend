@@ -45,6 +45,7 @@ const getTasks = async (
   projectId,
   userId,
   {
+    taskId, 
     page,
     limit,
     status,
@@ -57,8 +58,6 @@ const getTasks = async (
     order,
   },
 ) => {
-  const skip = (page - 1) * limit;
-
   const project = await Project.findOne({
     _id: projectId,
     isDeleted: false,
@@ -68,10 +67,29 @@ const getTasks = async (
 
   const allowed =
     project.owner.equals(userId) ||
-    project.admins.includes(userId) ||
-    project.members.includes(userId);
+    project.admins.some(id => id.equals(userId)) ||
+    project.members.some(id => id.equals(userId));
 
   if (!allowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
+
+  if (taskId) {
+    const task = await Task.findOne({
+      _id: taskId,
+      projectId,
+      isDeleted: false,
+    }).populate("assignees.user", "name email");
+
+    if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
+
+    return {
+      tasks: [task],  
+      total: 1,
+      page: 1,
+      limit: 1,
+    };
+  }
+
+  const skip = (page - 1) * limit;
 
   const filter = {
     projectId,
@@ -102,7 +120,6 @@ const getTasks = async (
       .limit(limit)
       .sort(sort)
       .populate("assignees.user", "name email"),
-
     Task.countDocuments(filter),
   ]);
 
@@ -422,49 +439,7 @@ const updateTask = async (taskId, userId, payload) => {
   return task;
 };
 
-const getTaskById = async (projectId, taskId, userId) => {
-  
-  const projectObjectId = new mongoose.Types.ObjectId(projectId);
-  const taskObjectId = new mongoose.Types.ObjectId(taskId);
-  const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  
-  const project = await Project.findOne({
-    _id: projectObjectId,
-    isDeleted: false,
-  });
-
-  if (!project) {
-    throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
-  }
-
-  
-  const isOwner = project.owner.equals(userObjectId);
-
-  const isAdmin = project.admins?.some((id) =>
-    id.equals(userObjectId)
-  );
-
-  const isMember = project.members?.some((id) =>
-    id.equals(userObjectId)
-  );
-
-  if (!isOwner && !isAdmin && !isMember) {
-    throw createError(ERROR_CODES.NOT_AUTHORIZED);
-  }
-
-  const task = await Task.findOne({
-    _id: taskObjectId,
-    projectId: projectObjectId,
-    isDeleted: false,
-  }).populate("assignees.user", "name email");
-
-  if (!task) {
-    throw createError(ERROR_CODES.TASK_NOT_FOUND);
-  }
-
-  return task;
-};
 
 module.exports = {
   createTask,
@@ -476,5 +451,4 @@ module.exports = {
   addAssigneesToTask,
   removeAssigneeFromTask,
   updateTask,
-  getTaskById
 };

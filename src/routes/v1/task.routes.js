@@ -21,13 +21,6 @@ router.get(
   taskController.getTasks
 );
 
-router.get(
-  "/projects/:projectId/tasks/:taskId",
-  authMiddleware,
-  validate(taskValidator.getTaskByIdParamSchema, "params"),
-  taskController.getTaskById
-);
-
 router.put(
   "/tasks/:taskId/self-complete",
   authMiddleware,

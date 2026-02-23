@@ -166,15 +166,24 @@
  * @swagger
  * /projects/{projectId}/tasks:
  *   get:
- *     summary: Get tasks for a project
+ *     summary: Get tasks for a project (single or multiple)
  *     description: |
- *       Returns paginated tasks within a project.
- *       Only owner, admins, or members can access.
+ *       Returns tasks within a project.
+ *
+ *       Behavior:
+ *       - If `taskId` is provided → returns that specific task (if it belongs to the project).
+ *       - If `taskId` is NOT provided → returns paginated list of tasks.
+ *
+ *       Only project owner, admins, or members can access.
  *       Supports filtering, searching, date range filtering, and sorting.
+ *
+ *       Note: Response format is always consistent (array in `data`).
+ *
  *     tags:
  *       - Task
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: projectId
@@ -185,18 +194,25 @@
  *         description: Project identifier
  *
  *       - in: query
+ *         name: taskId
+ *         schema:
+ *           type: string
+ *           example: 60f7b4d5e1a2b34c567890ab
+ *         description: Optional task ID. If provided, returns only this task.
+ *
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           example: 1
- *         description: Page number (default 1)
+ *         description: Page number (default 1). Ignored if taskId is provided.
  *
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           example: 10
- *         description: Number of tasks per page (max 50)
+ *         description: Number of tasks per page (max 50). Ignored if taskId is provided.
  *
  *       - in: query
  *         name: status
@@ -265,7 +281,7 @@
  *
  *     responses:
  *       200:
- *         description: Paginated list of tasks
+ *         description: Task(s) retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -295,7 +311,7 @@
  *       403:
  *         description: Not authorized to access this project
  *       404:
- *         description: Project not found
+ *         description: Project or task not found
  *       500:
  *         description: Internal server error
  */
@@ -503,62 +519,6 @@
  *         description: Internal server error
  */
 
-/**
- * @swagger
- * /projects/{projectId}/tasks/{taskId}:
- *   get:
- *     summary: Get a specific task of a project
- *     description: |
- *       Retrieves details of a specific task belonging to a project.
- *
- *       Access allowed to:
- *       - Project owner
- *       - Project admins
- *       - Project members
- *     tags:
- *       - Task
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *           example: 60f7b4d5e1a2b34c567890ab
- *         description: Unique project identifier
- *
- *       - in: path
- *         name: taskId
- *         required: true
- *         schema:
- *           type: string
- *           example: 60f7b4d5e1a2b34c567890cd
- *         description: Unique task identifier
- *
- *     responses:
- *       200:
- *         description: Task fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/Task'
- *
- *       401:
- *         description: Authentication required
- *       403:
- *         description: Not authorized to access task
- *       404:
- *         description: Task or project not found
- *       500:
- *         description: Internal server error
- */
 
 /**
  * @swagger

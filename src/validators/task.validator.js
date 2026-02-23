@@ -9,6 +9,7 @@ const createTaskSchema = Joi.object({
 });
 
 const getTasksSchema = Joi.object({
+  taskId: Joi.string().hex().length(24).optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(50).default(10),
   status: Joi.string().valid("todo", "in_progress", "done").optional(),

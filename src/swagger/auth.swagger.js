@@ -252,6 +252,62 @@
 
 /**
  * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current logged-in user
+ *     description: |
+ *       Returns the profile information of the currently authenticated user.
+ *       Requires a valid Bearer access token.
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Current user retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 698374fb238fcf93ddba647b
+ *                     name:
+ *                       type: string
+ *                       example: Ustaad1
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       example: ustaad1@test.com
+ *                     isDeleted:
+ *                       type: boolean
+ *                       example: false
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-02-04T16:34:03.049Z
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-02-06T10:36:29.919Z
+ *       401:
+ *         description: Authentication required or invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /auth/logout:
  *   post:
  *     summary: Logout user (blacklist current JWT)

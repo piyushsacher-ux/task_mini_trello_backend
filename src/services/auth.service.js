@@ -227,6 +227,21 @@ const logout = async (token) => {
   return true;
 };
 
+const getCurrentUser = async (userId) => {
+  const user = await User.findOne({
+    _id: userId,
+    isDeleted: false,
+  })
+    .select("-password -isVerified -forgotOtpVerified -__v") 
+    .lean();
+
+  if (!user) {
+    throw createError(ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  return user;
+};
+
 module.exports = {
   registerUser,
   verifyOtp,
@@ -234,4 +249,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   logout,
+  getCurrentUser
 };

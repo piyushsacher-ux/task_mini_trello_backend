@@ -91,6 +91,19 @@ const logout = async (req, res, next) => {
   }
 };
 
+const getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await authService.getCurrentUser(req.user._id);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 module.exports = {
   register,
@@ -98,5 +111,6 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
-  logout
+  logout,
+  getCurrentUser
 };

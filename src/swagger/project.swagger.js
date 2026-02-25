@@ -137,30 +137,42 @@
  *       - Owner
  *       - Admin
  *       - Member
+ *
+ *       Includes basic information (name and email) for:
+ *       - Owner
+ *       - Admins
+ *       - Members
+ *
  *       Supports pagination and name-based search.
  *     tags:
  *       - Project
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
+ *           default: 1
  *           example: 1
- *         description: Page number (default is 1)
+ *         description: Page number
+ *
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           default: 10
  *           example: 10
- *         description: Number of projects per page (default is 10)
+ *         description: Number of projects per page
+ *
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *           example: website
- *         description: Search projects by name
+ *         description: Search projects by name (case-insensitive)
+ *
  *     responses:
  *       200:
  *         description: Paginated list of projects
@@ -175,7 +187,69 @@
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Project'
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 65fa3e7d4a6c1a00123abcd1
+ *                       name:
+ *                         type: string
+ *                         example: Task Manager App
+ *                       description:
+ *                         type: string
+ *                         example: Internal project tracking system
+ *                       owner:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: 698374fb238fcf93ddba647b
+ *                           name:
+ *                             type: string
+ *                             example: Ustaad1
+ *                           email:
+ *                             type: string
+ *                             format: email
+ *                             example: ustaad1@test.com
+ *                       admins:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                               example: 698374fb238fcf93ddba647c
+ *                             name:
+ *                               type: string
+ *                               example: AdminUser
+ *                             email:
+ *                               type: string
+ *                               format: email
+ *                               example: admin@test.com
+ *                       members:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                               example: 698374fb238fcf93ddba647d
+ *                             name:
+ *                               type: string
+ *                               example: MemberUser
+ *                             email:
+ *                               type: string
+ *                               format: email
+ *                               example: member@test.com
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2026-02-04T16:34:03.049Z
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2026-02-06T10:36:29.919Z
+ *
  *                 meta:
  *                   type: object
  *                   properties:
@@ -188,8 +262,10 @@
  *                     limit:
  *                       type: integer
  *                       example: 10
+ *
  *       401:
  *         description: Authentication required
+ *
  *       500:
  *         description: Internal server error
  */

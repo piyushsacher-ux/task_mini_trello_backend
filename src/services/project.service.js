@@ -77,7 +77,10 @@ const getMyProjects = async (userId, { page, limit, search }) => {
   }
 
   const [projects, total] = await Promise.all([
-    Project.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Project.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 })
+    .populate("owner", "name email")
+    .populate("admins", "name email")
+    .populate("members", "name email"),
 
     Project.countDocuments(filter),
   ]);

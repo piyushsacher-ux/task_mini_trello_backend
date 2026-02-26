@@ -47,6 +47,13 @@ router.get(
   authController.getCurrentUser
 );
 
+router.patch(
+  "/me",
+  authMiddleware,
+  validate(authValidator.updateProfileSchema),
+  authController.updateProfile
+);
+
 router.post("/logout", authMiddleware, authController.logout);
 
 module.exports = router;

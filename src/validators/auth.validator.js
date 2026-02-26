@@ -47,7 +47,9 @@ const resetPasswordSchema = Joi.object({
 });
 
 
-
+const updateProfileSchema = Joi.object({
+  name: Joi.string().trim().min(2).max(25).optional(),
+}).min(1); 
 
 module.exports = {
   registerSchema,
@@ -56,5 +58,6 @@ module.exports = {
   forgotSchema,
   resetSchema,
   searchUsersSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  updateProfileSchema
 };

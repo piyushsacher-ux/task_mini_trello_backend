@@ -242,6 +242,20 @@ const getCurrentUser = async (userId) => {
   return user;
 };
 
+const updateProfile = async (userId, updateData) => {
+  const user = await User.findOneAndUpdate(
+    { _id: userId, isDeleted: false },
+    { $set: updateData },
+    { new: true, runValidators: true }
+  ).select("-password -isDeleted -isVerified -forgotOtpVerified -__v");
+
+  if (!user) {
+    throw createError(ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  return user;
+};
+
 module.exports = {
   registerUser,
   verifyOtp,
@@ -249,5 +263,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   logout,
-  getCurrentUser
+  getCurrentUser,
+  updateProfile
 };

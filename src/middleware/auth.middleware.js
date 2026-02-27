@@ -21,7 +21,12 @@ const authMiddleware = async (req, res, next) => {
       throw createError(ERROR_CODES.INVALID_TOKEN);
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      throw createError(ERROR_CODES.TOKEN_EXPIRED_OR_INVALID);
+    }
 
     const user = await User.findOne({
       _id: decoded.id,

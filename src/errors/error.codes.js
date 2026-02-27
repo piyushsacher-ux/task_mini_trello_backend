@@ -139,5 +139,10 @@ module.exports = {
   INVALID_OR_EXPIRED_OTP: {
     message: "Invalid or expired OTP",
     statusCode: StatusCodes.BAD_REQUEST,
+  },
+
+  TOKEN_EXPIRED_OR_INVALID: {
+    message: "Token expired or invalid",
+    statusCode: StatusCodes.UNAUTHORIZED,
   }
 };

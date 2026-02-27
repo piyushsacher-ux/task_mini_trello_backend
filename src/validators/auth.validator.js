@@ -51,6 +51,14 @@ const updateProfileSchema = Joi.object({
   name: Joi.string().trim().min(2).max(25).optional(),
 }).min(1); 
 
+const changeEmailSchema = Joi.object({
+  newEmail: Joi.string().email().required()
+});
+
+const verifyEmailChangeSchema = Joi.object({
+  otp: Joi.string().length(6).required()
+});
+
 module.exports = {
   registerSchema,
   verifyOtpSchema,
@@ -59,5 +67,7 @@ module.exports = {
   resetSchema,
   searchUsersSchema,
   resetPasswordSchema,
-  updateProfileSchema
+  updateProfileSchema,
+  changeEmailSchema,
+  verifyEmailChangeSchema
 };

@@ -5,28 +5,33 @@ const otpSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     type: {
       type: String,
-      enum: ["register", "forgot"],
-      required: true
+      enum: ["register", "forgot", "change_email"],
+      required: true,
+    },
+
+    newEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
     },
 
     otpHash: {
       type: String,
-      required: true
+      required: true,
     },
 
     expiresAt: {
       type: Date,
-      required: true
-    }
+      required: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 

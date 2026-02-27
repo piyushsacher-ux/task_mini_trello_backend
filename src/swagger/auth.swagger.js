@@ -7,6 +7,34 @@
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 698374fb238fcf93ddba647b
+ *         name:
+ *           type: string
+ *           example: Ustaad1
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: ustaad1@test.com
+ *         isDeleted:
+ *           type: boolean
+ *           example: false
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ */
+
+/**
+ * @swagger
  * /auth/register:
  *   post:
  *     summary: Register new user
@@ -209,6 +237,7 @@
  *           - Requires OTP to be verified first
  *           - Hashes new password before storing
  *           - Clears forgotOtpVerified flag after reset
+ *           - Increments tokenVersion (logs out all active sessions)
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -379,6 +408,101 @@
  *                   example: "Logged out successfully"
  *       401:
  *         description: Missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /auth/change-email:
+ *   post:
+ *     summary: Request email change
+ *     description: |
+ *       Sends a 6-digit OTP to the new email address.
+ *       Deletes previous change_email OTPs.
+ *       OTP expires in 5 minutes.
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newEmail
+ *             properties:
+ *               newEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: newemail@example.com
+ *     responses:
+ *       200:
+ *         description: OTP sent to new email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: OTP sent to new email
+ *       400:
+ *         description: Validation error or email already exists
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /auth/verify-email-change:
+ *   post:
+ *     summary: Verify OTP and update email
+ *     description: |
+ *       Verifies OTP sent to new email.
+ *       If valid:
+ *       - Updates user's email
+ *       - Increments tokenVersion (logs out all sessions)
+ *       - Deletes OTP record
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Email updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email updated successfully
+ *       400:
+ *         description: Invalid or expired OTP
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Internal server error
  */

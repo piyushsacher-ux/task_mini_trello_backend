@@ -125,4 +125,19 @@ module.exports = {
     message: "Too many requests. Please try again later.",
     statusCode: StatusCodes.TOO_MANY_REQUESTS,
   },
+
+  SAME_EMAIL_NOT_ALLOWED: {
+    message: "Same email not allowed",
+    statusCode: StatusCodes.BAD_REQUEST,
+  },
+
+  EMAIL_ALREADY_EXISTS: {
+    message: "Email already exists",
+    statusCode: StatusCodes.BAD_REQUEST,
+  },
+
+  INVALID_OR_EXPIRED_OTP: {
+    message: "Invalid or expired OTP",
+    statusCode: StatusCodes.BAD_REQUEST,
+  }
 };

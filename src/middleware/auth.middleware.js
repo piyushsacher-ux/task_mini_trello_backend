@@ -30,6 +30,10 @@ const authMiddleware = async (req, res, next) => {
 
     if (!user) throw createError(ERROR_CODES.NOT_AUTHORIZED);
 
+    if (decoded.tokenVersion !== user.tokenVersion) {
+      throw createError(ERROR_CODES.TOKEN_EXPIRED_OR_INVALID);
+    }
+
     req.user = user;
 
     next();

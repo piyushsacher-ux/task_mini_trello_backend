@@ -56,4 +56,18 @@ router.patch(
 
 router.post("/logout", authMiddleware, authController.logout);
 
+router.post(
+  "/change-email",
+  authMiddleware,
+  validate(authValidator.changeEmailSchema),
+  authController.requestEmailChange
+);
+
+router.post(
+  "/verify-email-change",
+  authMiddleware,
+  validate(authValidator.verifyEmailChangeSchema),
+  authController.verifyEmailChange
+);
+
 module.exports = router;

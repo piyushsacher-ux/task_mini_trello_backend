@@ -120,6 +120,38 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const requestEmailChange = async (req, res, next) => {
+  try {
+    await authService.requestEmailChange(
+      req.user._id,
+      req.body.newEmail
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "OTP sent to new email"
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const verifyEmailChange = async (req, res, next) => {
+  try {
+    await authService.verifyEmailChange(
+      req.user._id,
+      req.body.otp
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Email updated successfully"
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 module.exports = {
   register,
@@ -129,5 +161,7 @@ module.exports = {
   resetPassword,
   logout,
   getCurrentUser,
-  updateProfile
+  updateProfile,
+  requestEmailChange,
+  verifyEmailChange
 };

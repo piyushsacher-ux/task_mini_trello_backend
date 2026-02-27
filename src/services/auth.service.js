@@ -32,7 +32,7 @@ const registerUser = async ({ name, email, password }) => {
     const verificationToken = jwt.sign(
       { id: existing._id },
       process.env.JWT_SECRET,
-      { expiresIn: "5m" }
+      { expiresIn: "5m" },
     );
 
     return { verificationToken };
@@ -82,9 +82,13 @@ const loginUser = async ({ email, password }) => {
 
   if (!isMatch) throw createError(ERROR_CODES.INVALID_CREDENTIALS);
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
+  const token = jwt.sign(
+    { id: user._id, tokenVersion: user.tokenVersion },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
 
   return token;
 };
@@ -155,8 +159,6 @@ const verifyOtp = async ({ userId, otp, type }) => {
     throw createError(ERROR_CODES.OTP_EXPIRED);
   }
 
-  
-
   // REGISTER FLOW
   if (type === "register") {
     await User.findByIdAndUpdate(userId, { isVerified: true });
@@ -197,8 +199,13 @@ const resetPassword = async ({ userId, password }) => {
   const hash = await bcrypt.hash(password, 10);
 
   await User.findByIdAndUpdate(userId, {
-    password: hash,
-    forgotOtpVerified: false,
+    $set: {
+      password: hash,
+      forgotOtpVerified: false,
+    },
+    $inc: {
+      tokenVersion: 1,
+    },
   });
 
   await Otp.deleteMany({
@@ -232,7 +239,7 @@ const getCurrentUser = async (userId) => {
     _id: userId,
     isDeleted: false,
   })
-    .select("-password -isVerified -forgotOtpVerified -__v") 
+    .select("-password -isVerified -forgotOtpVerified -__v")
     .lean();
 
   if (!user) {
@@ -246,7 +253,7 @@ const updateProfile = async (userId, updateData) => {
   const user = await User.findOneAndUpdate(
     { _id: userId, isDeleted: false },
     { $set: updateData },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   ).select("-password -isDeleted -isVerified -forgotOtpVerified -__v");
 
   if (!user) {
@@ -256,13 +263,96 @@ const updateProfile = async (userId, updateData) => {
   return user;
 };
 
+const requestEmailChange = async (userId, newEmail) => {
+  newEmail = newEmail.toLowerCase().trim();
+
+  const user = await User.findById(userId);
+  if (!user) throw createError(ERROR_CODES.USER_NOT_FOUND);
+
+  if (user.email === newEmail) {
+    throw createError(ERROR_CODES.SAME_EMAIL_NOT_ALLOWED);
+  }
+
+  const existingUser = await User.findOne({ email: newEmail });
+  if (existingUser) {
+    throw createError(ERROR_CODES.EMAIL_ALREADY_EXISTS);
+  }
+
+  // Generate OTP
+  const otp = crypto.randomInt(100000, 999999).toString();
+  const otpHash = await bcrypt.hash(otp, 10);
+
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  // Remove previous change_email OTP
+  await Otp.deleteMany({ userId, type: "change_email" });
+
+  await Otp.create({
+    userId,
+    type: "change_email",
+    newEmail,
+    otpHash,
+    expiresAt,
+  });
+
+  await sendMail({
+    to: newEmail,
+    subject: "Verify your new email",
+    text: `Your OTP is ${otp}`,
+  });
+
+  return true;
+};
+
+const verifyEmailChange = async (userId, otp) => {
+  otp = otp.trim();
+  const otpDoc = await Otp.findOne({
+    userId,
+    type: "change_email",
+  });
+
+  if (!otpDoc) {
+    throw createError(ERROR_CODES.INVALID_OR_EXPIRED_OTP);
+  }
+
+  if (otpDoc.expiresAt < new Date()) {
+    await Otp.deleteOne({ _id: otpDoc._id });
+    throw createError(ERROR_CODES.INVALID_OR_EXPIRED_OTP);
+  }
+
+  const isMatch = await bcrypt.compare(otp, otpDoc.otpHash);
+  if (!isMatch) {
+    throw createError(ERROR_CODES.INVALID_OTP);
+  }
+
+  // Update email
+  try {
+    await User.updateOne(
+      { _id: userId },
+      { $set: { email: otpDoc.newEmail }, $inc: { tokenVersion: 1 } },
+    );
+  } catch (err) {
+    if (err.code === 11000) {
+      throw createError(ERROR_CODES.EMAIL_ALREADY_EXISTS);
+    }
+    throw err;
+  }
+
+  // Delete OTP record
+  await Otp.deleteOne({ _id: otpDoc._id });
+
+  return true;
+};
+
 module.exports = {
   registerUser,
   verifyOtp,
   loginUser,
+  requestEmailChange,
+  verifyEmailChange,
   forgotPassword,
   resetPassword,
   logout,
   getCurrentUser,
-  updateProfile
+  updateProfile,
 };

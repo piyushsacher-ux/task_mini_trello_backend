@@ -1,3 +1,4 @@
 module.exports = {
-  sendMail: require("./mail")
+  sendMail: require("./mail"),
+  logger: require("./logger")
 };

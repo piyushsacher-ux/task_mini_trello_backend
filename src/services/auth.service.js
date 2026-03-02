@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const { sendMail } = require("../utils");
+const { sendMail, logger } = require("../utils");
 const { User, Otp, TokenBlacklist } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
@@ -165,7 +165,9 @@ const verifyOtp = async ({ userId, otp, type }) => {
   }
 
   if (type === "forgot") {
-    
+    await User.findByIdAndUpdate(userId, {
+      passwordResetVerifiedAt: new Date(),
+    });
   }
   await record.deleteOne();
 
@@ -199,6 +201,8 @@ const resetPassword = async ({ userId, password }) => {
     userId,
     type: "forgot",
   });
+
+  logger.info(`Password reset successful for user: ${userId}`);
 
   return true;
 };

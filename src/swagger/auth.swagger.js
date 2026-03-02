@@ -236,7 +236,7 @@
  *           - Requires short-lived verification token (from forgot-password flow)
  *           - Requires OTP to be verified first
  *           - Hashes new password before storing
- *           - Clears forgotOtpVerified flag after reset
+ *           - Clears passwordResetVerifiedAt timestamp after reset
  *           - Increments tokenVersion (logs out all active sessions)
  *     tags: [Auth]
  *     security:

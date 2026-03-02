@@ -4,4 +4,5 @@ module.exports = {
   Project: require("./project.model"),
   Task: require("./task.model"),
   TokenBlacklist: require("./tokenBlackList.model"),
+  Message: require("./message.model"),
 };

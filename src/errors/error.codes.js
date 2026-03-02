@@ -144,5 +144,10 @@ module.exports = {
   TOKEN_EXPIRED_OR_INVALID: {
     message: "Token expired or invalid",
     statusCode: StatusCodes.UNAUTHORIZED,
+  },
+
+  USER_IS_NOT_MEMBER: {
+    message: "User is not a member of this project",
+    statusCode: StatusCodes.FORBIDDEN,
   }
 };

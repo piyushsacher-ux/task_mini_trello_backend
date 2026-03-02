@@ -6,14 +6,27 @@ const Project = require("../models/project.model");
  * Save a new message
  */
 const createMessage = async ({ projectId, senderId, content }) => {
-  // Optional: verify project exists
-  const project = await Project.findById(projectId);
+  const project = await Project.findById(projectId)
+    .select("members owner createdBy");
+
   if (!project) {
     throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
   }
 
-  // Optional: verify sender is member of project
-  if (!project.members.includes(senderId)) {
+  const senderIdStr = senderId.toString();
+
+  const isMember =
+    project.members?.some(
+      (memberId) => memberId.toString() === senderIdStr
+    ) || false;
+
+  const isOwner =
+    project.owner?.toString() === senderIdStr;
+
+  const isCreator =
+    project.createdBy?.toString() === senderIdStr;
+
+  if (!isMember && !isOwner && !isCreator) {
     throw createError(ERROR_CODES.USER_IS_NOT_MEMBER);
   }
 
@@ -22,6 +35,8 @@ const createMessage = async ({ projectId, senderId, content }) => {
     sender: senderId,
     content,
   });
+
+  await message.populate("sender", "name email");
 
   return message;
 };

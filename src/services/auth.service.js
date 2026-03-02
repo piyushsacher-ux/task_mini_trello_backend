@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const { sendMail } = require("../utils");
+const { sendMail, logger } = require("../utils");
 const { User, Otp, TokenBlacklist } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
@@ -35,6 +35,8 @@ const registerUser = async ({ name, email, password }) => {
       { expiresIn: "5m" },
     );
 
+    logger.info(`OTP resent for registration: user ${existing._id}`);
+
     return { verificationToken };
   }
   // flow for new user
@@ -67,6 +69,8 @@ const registerUser = async ({ name, email, password }) => {
   //   subject: "Verify your account",
   //   text: `Your OTP is ${otp}. Valid for 5 minutes.`,
   // });
+
+  logger.info(`New user registered: ${user._id} (${user.email})`);
 
   return { verificationToken };
 };
@@ -166,21 +170,8 @@ const verifyOtp = async ({ userId, otp, type }) => {
 
   if (type === "forgot") {
     await User.findByIdAndUpdate(userId, {
-      forgotOtpVerified: true,
+      passwordResetVerifiedAt: new Date(),
     });
-
-    setTimeout(
-      async () => {
-        try {
-          await User.findByIdAndUpdate(userId, {
-            forgotOtpVerified: false,
-          });
-        } catch (err) {
-          console.error("Failed to auto reset forgotOtpVerified", err);
-        }
-      },
-      5 * 60 * 1000,
-    );
   }
   await record.deleteOne();
 
@@ -192,7 +183,9 @@ const resetPassword = async ({ userId, password }) => {
 
   if (!user) throw createError(ERROR_CODES.USER_NOT_FOUND);
 
-  if (!user.forgotOtpVerified) {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+  if (!user.passwordResetVerifiedAt || user.passwordResetVerifiedAt < fiveMinutesAgo) {
     throw createError(ERROR_CODES.OTP_NOT_VERIFIED);
   }
 
@@ -201,7 +194,7 @@ const resetPassword = async ({ userId, password }) => {
   await User.findByIdAndUpdate(userId, {
     $set: {
       password: hash,
-      forgotOtpVerified: false,
+      passwordResetVerifiedAt: null,
     },
     $inc: {
       tokenVersion: 1,
@@ -212,6 +205,8 @@ const resetPassword = async ({ userId, password }) => {
     userId,
     type: "forgot",
   });
+
+  logger.info(`Password reset successful for user: ${userId}`);
 
   return true;
 };
@@ -239,7 +234,7 @@ const getCurrentUser = async (userId) => {
     _id: userId,
     isDeleted: false,
   })
-    .select("-password -isVerified -forgotOtpVerified -__v")
+    .select("-password -isVerified -passwordResetVerifiedAt -__v")
     .lean();
 
   if (!user) {
@@ -254,7 +249,7 @@ const updateProfile = async (userId, updateData) => {
     { _id: userId, isDeleted: false },
     { $set: updateData },
     { new: true, runValidators: true },
-  ).select("-password -isDeleted -isVerified -forgotOtpVerified -__v");
+  ).select("-password -isDeleted -isVerified -passwordResetVerifiedAt -__v");
 
   if (!user) {
     throw createError(ERROR_CODES.USER_NOT_FOUND);

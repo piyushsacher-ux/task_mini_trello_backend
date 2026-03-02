@@ -8,15 +8,27 @@ const swaggerSpec = require("./swagger");
 const errorHandler = require("./errors/error.handler");
 const { connectDB } = require("./config");
 const registerChatSocket=require("./socket").registerChatSocket;
+
+const { logger } = require("./utils");
+const morgan = require("morgan");
+
 const rateLimiter = require("./middleware").rateLimiter;
 
 
 const app = express();
 
-app.set('trust proxy',1);
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 app.use(rateLimiter.globalLimiter);
+
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms", {
+    stream: {
+      write: (message) => logger.http(message.trim()),
+    },
+  })
+);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -37,11 +49,12 @@ const startServer = async () => {
     registerChatSocket(io);
 
     server.listen(PORT, () => {
-      console.log(`Server running on ${PORT}`);
+      logger.info(`Server running on ${PORT}`);
+
     });
 
   } catch (err) {
-    console.error("Failed to start server:", err);
+    logger.error("Failed to start server:", err);
     process.exit(1);
   }
 };

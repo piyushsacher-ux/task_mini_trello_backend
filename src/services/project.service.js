@@ -1,5 +1,6 @@
 const { Project, User, Task } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
+const { logger } = require("../utils");
 
 const createProject = async (
   { name, description = "", admins = [], members = [] },
@@ -61,6 +62,8 @@ const createProject = async (
     members,
   });
 
+  logger.info(`Project created: ${project._id} by user: ${ownerId}`);
+
   return project;
 };
 
@@ -78,9 +81,9 @@ const getMyProjects = async (userId, { page, limit, search }) => {
 
   const [projects, total] = await Promise.all([
     Project.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 })
-    .populate("owner", "name email")
-    .populate("admins", "name email")
-    .populate("members", "name email"),
+      .populate("owner", "name email")
+      .populate("admins", "name email")
+      .populate("members", "name email"),
 
     Project.countDocuments(filter),
   ]);
@@ -124,7 +127,9 @@ const updateProject = async (projectId, userId, payload) => {
     payload.nameLower = normalized;
   }
 
-  return Project.findByIdAndUpdate(projectId, payload, { new: true });
+  const updatedProject = await Project.findByIdAndUpdate(projectId, payload, { new: true });
+  logger.info(`Project updated: ${projectId} by user: ${userId}`);
+  return updatedProject;
 };
 
 const deleteProject = async (projectId, userId) => {
@@ -145,6 +150,8 @@ const deleteProject = async (projectId, userId) => {
   // soft delete project
   project.isDeleted = true;
   await project.save();
+
+  logger.info(`Project deleted: ${projectId} by user: ${userId}`);
 
   //soft delete all tasks under this project
   await Task.updateMany({ projectId }, { $set: { isDeleted: true } });
@@ -184,7 +191,7 @@ const addMembers = async (projectId, actorId, members) => {
   });
 
   await project.save();
-
+  logger.info(`Members added to project: ${projectId} by user: ${actorId}`);
   return project;
 };
 

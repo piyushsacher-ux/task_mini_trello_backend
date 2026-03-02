@@ -24,9 +24,9 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
     
-    forgotOtpVerified: {
-      type: Boolean,
-      default: false,
+    passwordResetVerifiedAt: {
+      type: Date,
+      default: null,
     },
 
     tokenVersion: {

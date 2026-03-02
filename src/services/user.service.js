@@ -1,6 +1,8 @@
 const { User } = require("../models");
+const { logger } = require("../utils");
 
 const searchUsers = async (query, currentUserId, page, limit) => {
+  logger.debug(`User search: "${query}" by user: ${currentUserId}`);
   const skip = (page - 1) * limit;
   return User.find({
     _id: { $ne: currentUserId },

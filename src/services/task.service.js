@@ -1,5 +1,6 @@
 const { Task, Project, User } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
+const { logger } = require("../utils");
 const mongoose = require("mongoose");
 
 const createTask = async (projectId, userId, payload) => {
@@ -38,6 +39,8 @@ const createTask = async (projectId, userId, payload) => {
     dueDate: payload.dueDate,
   });
 
+  logger.info(`Task created: ${task._id} in project: ${projectId} by user: ${userId}`);
+
   return task;
 };
 
@@ -45,7 +48,7 @@ const getTasks = async (
   projectId,
   userId,
   {
-    taskId, 
+    taskId,
     page,
     limit,
     status,
@@ -82,7 +85,7 @@ const getTasks = async (
     if (!task) throw createError(ERROR_CODES.TASK_NOT_FOUND);
 
     return {
-      tasks: [task],  
+      tasks: [task],
       total: 1,
       page: 1,
       limit: 1,
@@ -204,6 +207,8 @@ const deleteTask = async (taskId, userId) => {
 
   task.isDeleted = true;
   await task.save();
+
+  logger.info(`Task deleted: ${taskId} by user: ${userId}`);
 
   return task;
 };

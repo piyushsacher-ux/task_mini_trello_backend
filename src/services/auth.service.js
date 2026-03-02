@@ -35,6 +35,8 @@ const registerUser = async ({ name, email, password }) => {
       { expiresIn: "5m" },
     );
 
+    logger.info(`OTP resent for registration: user ${existing._id}`);
+
     return { verificationToken };
   }
   // flow for new user
@@ -67,6 +69,8 @@ const registerUser = async ({ name, email, password }) => {
   //   subject: "Verify your account",
   //   text: `Your OTP is ${otp}. Valid for 5 minutes.`,
   // });
+
+  logger.info(`New user registered: ${user._id} (${user.email})`);
 
   return { verificationToken };
 };

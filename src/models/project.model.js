@@ -40,8 +40,12 @@ const projectSchema = new mongoose.Schema(
     },
   },
   { timestamps: true },
-  
 );
-projectSchema.index({ owner: 1, nameLower: 1 }, { unique: true })
+projectSchema.index({ owner: 1, nameLower: 1 }, 
+  { 
+    unique: true,
+    partialFilterExpression: { isDeleted: false }
+  }
+)
 
 module.exports = mongoose.model("Project", projectSchema);

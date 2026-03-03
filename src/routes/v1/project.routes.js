@@ -73,5 +73,14 @@ router.get(
   projectController.getProjectById
 );
 
+router.get(
+  "/:projectId/members",
+  authMiddleware,
+  validate(projectValidator.projectIdParamSchema, "params"),
+  validate(projectValidator.getProjectsSchema, "query"),
+  projectController.getProjectMembers
+);
+
+
 
 module.exports = router;

@@ -65,4 +65,53 @@
  *         description: Missing or invalid authentication token
  *       500:
  *         description: Internal server error
+ *
+ * /users/stats:
+ *   get:
+ *     summary: Get statistics for the current user
+ *     description: |
+ *       Returns project and task counts for the authenticated user.
+ *       - **totalProjects**: Projects where user is owner, admin, or member.
+ *       - **totalTasks**: Total tasks assigned to the user.
+ *       - **todo**: User's status is 'todo' and overall task is 'todo'.
+ *       - **inProgress**: User's status is 'todo' but overall task is 'in_progress'.
+ *       - **done**: User's status is 'done'.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalProjects:
+ *                       type: integer
+ *                       example: 5
+ *                     totalTasks:
+ *                       type: integer
+ *                       example: 10
+ *                     todo:
+ *                       type: integer
+ *                       example: 3
+ *                     inProgress:
+ *                       type: integer
+ *                       example: 2
+ *                     done:
+ *                       type: integer
+ *                       example: 5
+ *       401:
+ *         description: Missing or invalid authentication token
+ *       500:
+ *         description: Internal server error
  */
+

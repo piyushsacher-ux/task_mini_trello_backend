@@ -144,6 +144,28 @@ const getProjectById = async (req, res, next) => {
 };
 
 
+const getProjectMembers = async (req, res, next) => {
+  try {
+    const result = await projectService.getProjectMembers(
+      req.params.projectId,
+      req.user._id,
+      req.query
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: result.members,
+      meta: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createProject,
   getMyProjects,
@@ -153,6 +175,8 @@ module.exports = {
   removeMember,
   addAdmins,
   removeAdmin,
-  getProjectById
+  getProjectById,
+  getProjectMembers
 };
+
 

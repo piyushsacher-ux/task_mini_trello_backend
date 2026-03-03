@@ -708,3 +708,83 @@
  *         description: Internal server error
  */
 
+/**
+ * @swagger
+ * /projects/{projectId}/members:
+ *   get:
+ *     summary: Get paginated list of project members
+ *     description: |
+ *       Returns a paginated list of all users involved in the project (owner, admins, and members).
+ *       - Only accessible by project members (owner, admins, or members)
+ *       - Supports pagination through `page` and `limit`
+ *       - Supports optional `search` by name or email
+ *     tags: [Project]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Unique project identifier
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of members per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search members by name or email
+ *     responses:
+ *       200:
+ *         description: List of project members retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       isOwner:
+ *                         type: boolean
+ *                         example: false
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Not authorized to view members
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
+ */

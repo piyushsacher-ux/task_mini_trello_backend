@@ -2,10 +2,7 @@ const { Project, User, Task } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 const { logger } = require("../utils");
 
-const createProject = async (
-  { name, description = "", admins = [], members = [] },
-  ownerId,
-) => {
+const createProject = async ({ name, description = "", admins = [], members = [] }, ownerId) => {
   if (!name || !name.trim()) {
     throw createError(ERROR_CODES.PROJECT_NAME_REQUIRED);
   }
@@ -293,6 +290,70 @@ const getProjectById = async (projectId, userId) => {
   return project;
 };
 
+const getProjectMembers = async (projectId, userId, { page = 1, limit = 10, search = "" }) => {
+
+  const project = await Project.findOne({
+    _id: projectId,
+    isDeleted: false,
+  });
+
+  if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
+
+  const isAllowed =
+    project.owner.equals(userId) ||
+    project.admins.includes(userId) ||
+    project.members.includes(userId);
+
+  if (!isAllowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
+
+  // Combine owner, admins, and members into a unique set of IDs
+  const allMemberIds = [
+    project.owner,
+    ...project.admins,
+    ...project.members
+  ].map(id => id.toString());
+  
+  const uniqueMemberIds = [...new Set(allMemberIds)];
+
+  const skip = (page - 1) * limit;
+  const filter = {
+    _id: { $in: uniqueMemberIds },
+    isDeleted: false,
+  };
+
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } }
+    ];
+  }
+
+  const [members, total] = await Promise.all([
+    User.find(filter)
+      .select("name email")
+      .skip(skip)
+      .limit(limit)
+      .sort({ name: 1 }),
+    User.countDocuments(filter),
+  ]);
+
+  const membersWithRole = members.map(member => {
+    const memberObj = member.toObject();
+    return {
+      ...memberObj,
+      isOwner: project.owner.toString() === member._id.toString()
+    };
+  });
+
+  return {
+    members: membersWithRole,
+    total,
+    page,
+    limit,
+  };
+};
+
+
 module.exports = {
   createProject,
   getMyProjects,
@@ -303,4 +364,6 @@ module.exports = {
   removeMember,
   removeAdmin,
   getProjectById,
+  getProjectMembers,
 };
+

@@ -15,6 +15,21 @@ const searchUsers = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  searchUsers
+const getUserStats = async (req, res, next) => {
+  try {
+    const stats = await userService.getUserStats(req.user._id);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: stats
+    });
+  } catch (err) {
+    next(err);
+  }
 };
+
+module.exports = {
+  searchUsers,
+  getUserStats
+};
+

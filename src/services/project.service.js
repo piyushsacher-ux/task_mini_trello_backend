@@ -102,8 +102,16 @@ const updateProject = async (projectId, userId, payload) => {
   if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
   // Authorization
-  if (!project.owner.equals(userId) && !project.admins.includes(userId)) {
+  if (!project.owner.equals(userId) && !project.admins.some((id) => id.equals(userId))) {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
+  }
+
+  // Check if anything is actually changing
+  const nameChanged = payload.name && payload.name.trim() !== project.name;
+  const descChanged = payload.description !== undefined && payload.description !== project.description;
+
+  if (!nameChanged && !descChanged) {
+    throw createError(ERROR_CODES.NO_CHANGES_DETECTED);
   }
 
   if (payload.name) {
@@ -162,7 +170,7 @@ const addMembers = async (projectId, actorId, members) => {
   if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
   // owner or admin
-  if (!project.owner.equals(actorId) && !project.admins.includes(actorId)) {
+  if (!project.owner.equals(actorId) && !project.admins.some((id) => id.equals(actorId))) {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
 
@@ -197,7 +205,7 @@ const removeMember = async (projectId, actorId, memberId) => {
 
   if (!project) throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
 
-  if (!project.owner.equals(actorId) && !project.admins.includes(actorId)) {
+  if (!project.owner.equals(actorId) && !project.admins.some((id) => id.equals(actorId))) {
     throw createError(ERROR_CODES.NOT_AUTHORIZED);
   }
 
@@ -301,19 +309,12 @@ const getProjectMembers = async (projectId, userId, { page = 1, limit = 10, sear
 
   const isAllowed =
     project.owner.equals(userId) ||
-    project.admins.includes(userId) ||
-    project.members.includes(userId);
+    project.admins.some((id) => id.equals(userId)) ||
+    project.members.some((id) => id.equals(userId));
 
   if (!isAllowed) throw createError(ERROR_CODES.NOT_AUTHORIZED);
 
-  // Combine owner, admins, and members into a unique set of IDs
-  const allMemberIds = [
-    project.owner,
-    ...project.admins,
-    ...project.members
-  ].map(id => id.toString());
-  
-  const uniqueMemberIds = [...new Set(allMemberIds)];
+  const uniqueMemberIds = [...new Set(project.members.map(id => id.toString()))];
 
   const skip = (page - 1) * limit;
   const filter = {
@@ -337,16 +338,8 @@ const getProjectMembers = async (projectId, userId, { page = 1, limit = 10, sear
     User.countDocuments(filter),
   ]);
 
-  const membersWithRole = members.map(member => {
-    const memberObj = member.toObject();
-    return {
-      ...memberObj,
-      isOwner: project.owner.toString() === member._id.toString()
-    };
-  });
-
   return {
-    members: membersWithRole,
+    members,
     total,
     page,
     limit,

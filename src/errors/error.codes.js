@@ -149,5 +149,9 @@ module.exports = {
   USER_IS_NOT_MEMBER: {
     message: "User is not a member of this project",
     statusCode: StatusCodes.FORBIDDEN,
+  },
+  NO_CHANGES_DETECTED: {
+    message: "No changes detected in the update",
+    statusCode: StatusCodes.BAD_REQUEST,
   }
 };

@@ -412,7 +412,7 @@
  *                 data:
  *                   $ref: '#/components/schemas/Project'
  *       400:
- *         description: Validation error or duplicate project name
+ *         description: Validation error, duplicate project name, or no changes detected in update
  *       401:
  *         description: Authentication required
  *       403:
@@ -767,9 +767,6 @@
  *                         type: string
  *                       email:
  *                         type: string
- *                       isOwner:
- *                         type: boolean
- *                         example: false
  *                 meta:
  *                   type: object
  *                   properties:

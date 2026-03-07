@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-const { ERROR_CODES } = require("../errors");
+const { ERROR_CODES , createError} = require("../errors");
 
 const socketAuth = async (socket, next) => {
   try {
@@ -16,7 +16,6 @@ const socketAuth = async (socket, next) => {
     } catch (error) {
       throw createError(ERROR_CODES.INVALID_TOKEN);
     }
-
     // Optional but recommended: verify user still exists
     const user = await User.findById(decoded.id);
     if (!user) {

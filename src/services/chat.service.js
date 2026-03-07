@@ -7,7 +7,7 @@ const Project = require("../models/project.model");
  */
 const createMessage = async ({ projectId, senderId, content }) => {
   const project = await Project.findById(projectId)
-    .select("members owner createdBy");
+    .select("members owner admins");
 
   if (!project) {
     throw createError(ERROR_CODES.PROJECT_NOT_FOUND);
@@ -23,10 +23,12 @@ const createMessage = async ({ projectId, senderId, content }) => {
   const isOwner =
     project.owner?.toString() === senderIdStr;
 
-  const isCreator =
-    project.createdBy?.toString() === senderIdStr;
+  const isAdmin =
+    project.admins?.some(
+      (adminId) => adminId.toString() === senderIdStr
+    ) || false;
 
-  if (!isMember && !isOwner && !isCreator) {
+  if (!isMember && !isOwner && !isAdmin) {
     throw createError(ERROR_CODES.USER_IS_NOT_MEMBER);
   }
 

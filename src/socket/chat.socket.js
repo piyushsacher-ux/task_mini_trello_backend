@@ -14,7 +14,7 @@ const registerChatSocket = (io) => {
      */
     const checkProjectAccess = async (projectId, userId) => {
       const project = await Project.findById(projectId)
-        .select("members owner createdBy");
+        .select("members owner admins");
 
       if (!project) {
         return { error: "Project not found", status: StatusCodes.NOT_FOUND };
@@ -30,10 +30,12 @@ const registerChatSocket = (io) => {
       const isOwner =
         project.owner?.toString() === userIdStr;
 
-      const isCreator =
-        project.createdBy?.toString() === userIdStr;
+      const isAdmin =
+        project.admins?.some(
+          (adminId) => adminId.toString() === userIdStr
+        ) || false;
 
-      if (!isMember && !isOwner && !isCreator) {
+      if (!isMember && !isOwner && !isAdmin) {
         return { error: "Not authorized", status: StatusCodes.FORBIDDEN };
       }
 

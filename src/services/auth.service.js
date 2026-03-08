@@ -5,6 +5,37 @@ const { sendMail, logger } = require("../utils");
 const { User, Otp, TokenBlacklist } = require("../models");
 const { ERROR_CODES, createError } = require("../errors");
 
+const generateAuthTokens = async (user) => {
+  const accessTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day
+  const accessToken = jwt.sign(
+    { id: user._id, tokenVersion: user.tokenVersion },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  const refreshTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+  const refreshToken = jwt.sign(
+    { id: user._id, tokenVersion: user.tokenVersion },
+    process.env.JWT_SECRET,
+    { expiresIn: "30d" }
+  );
+
+  // Save refresh token directly to user
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return {
+    access: {
+      token: accessToken,
+      expiresAt: accessTokenExpiresAt,
+    },
+    refresh: {
+      token: refreshToken,
+      expiresAt: refreshTokenExpiresAt,
+    },
+  };
+};
+
 const registerUser = async ({ name, email, password }) => {
   const existing = await User.findOne({ email });
 
@@ -86,15 +117,34 @@ const loginUser = async ({ email, password }) => {
 
   if (!isMatch) throw createError(ERROR_CODES.INVALID_CREDENTIALS);
 
-  const token = jwt.sign(
-    { id: user._id, tokenVersion: user.tokenVersion },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1d",
-    },
-  );
+  return generateAuthTokens(user);
+};
 
-  return token;
+const refreshAuth = async (refreshToken) => {
+  try {
+    const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findOne({
+      _id: payload.id,
+      refreshToken,
+      isDeleted: false,
+    });
+
+    if (!user) {
+      throw createError(ERROR_CODES.REFRESH_TOKEN_NOT_FOUND);
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw createError(ERROR_CODES.INVALID_TOKEN);
+    }
+
+    // Token is valid. Rotate it.
+    return generateAuthTokens(user);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw createError(ERROR_CODES.REFRESH_TOKEN_EXPIRED);
+    }
+    throw error;
+  }
 };
 
 const forgotPassword = async ({ email }) => {
@@ -195,6 +245,7 @@ const resetPassword = async ({ userId, password }) => {
     $set: {
       password: hash,
       passwordResetVerifiedAt: null,
+      refreshToken: null,
     },
     $inc: {
       tokenVersion: 1,
@@ -225,6 +276,9 @@ const logout = async (token) => {
     token,
     expiresAt: new Date(decoded.exp * 1000),
   });
+
+  // Clear refresh token from user
+  await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
 
   return true;
 };
@@ -324,7 +378,10 @@ const verifyEmailChange = async (userId, otp) => {
   try {
     await User.updateOne(
       { _id: userId },
-      { $set: { email: otpDoc.newEmail }, $inc: { tokenVersion: 1 } },
+      {
+        $set: { email: otpDoc.newEmail, refreshToken: null },
+        $inc: { tokenVersion: 1 },
+      },
     );
   } catch (err) {
     if (err.code === 11000) {
@@ -343,6 +400,7 @@ module.exports = {
   registerUser,
   verifyOtp,
   loginUser,
+  refreshAuth,
   requestEmailChange,
   verifyEmailChange,
   forgotPassword,

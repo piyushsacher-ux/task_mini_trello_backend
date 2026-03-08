@@ -49,14 +49,18 @@ const resetPasswordSchema = Joi.object({
 
 const updateProfileSchema = Joi.object({
   name: Joi.string().trim().min(2).max(25).optional(),
-}).min(1); 
+}).min(1);
 
 const changeEmailSchema = Joi.object({
   newEmail: Joi.string().email().required()
 });
 
 const verifyEmailChangeSchema = Joi.object({
-  otp: Joi.string().length(6).required()
+  otp: Joi.string().length(6).required(),
+});
+
+const refreshTokensSchema = Joi.object({
+  refreshToken: Joi.string().required(),
 });
 
 module.exports = {
@@ -69,5 +73,6 @@ module.exports = {
   resetPasswordSchema,
   updateProfileSchema,
   changeEmailSchema,
-  verifyEmailChangeSchema
+  verifyEmailChangeSchema,
+  refreshTokensSchema,
 };

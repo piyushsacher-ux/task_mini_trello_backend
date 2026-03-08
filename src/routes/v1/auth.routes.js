@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { authController } = require("../../controllers");
 const { authValidator } = require("../../validators");
-const { validate,verifyToken,authMiddleware,rateLimiter} = require("../../middleware");
+const { validate, verifyToken, authMiddleware, rateLimiter } = require("../../middleware");
 
 
 router.post(
@@ -25,6 +25,12 @@ router.post(
   rateLimiter.authLimiter,
   validate(authValidator.loginSchema),
   authController.login,
+);
+
+router.post(
+  "/refresh-tokens",
+  validate(authValidator.refreshTokensSchema),
+  authController.refreshTokens
 );
 
 router.post(

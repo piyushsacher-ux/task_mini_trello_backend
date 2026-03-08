@@ -11,7 +11,7 @@ const register = async (req, res, next) => {
       verificationToken: result.verificationToken,
     });
   } catch (err) {
-     next(err);
+    next(err);
   }
 };
 
@@ -35,11 +35,24 @@ const verifyOtp = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const token = await authService.loginUser(req.body);
+    const tokens = await authService.loginUser(req.body);
 
     res.status(StatusCodes.OK).json({
       success: true,
-      token
+      tokens,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const refreshTokens = async (req, res, next) => {
+  try {
+    const tokens = await authService.refreshAuth(req.body.refreshToken);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      tokens,
     });
   } catch (err) {
     next(err);
@@ -157,6 +170,7 @@ module.exports = {
   register,
   verifyOtp,
   login,
+  refreshTokens,
   forgotPassword,
   resetPassword,
   logout,

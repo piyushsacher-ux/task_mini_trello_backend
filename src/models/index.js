@@ -5,4 +5,5 @@ module.exports = {
   Task: require("./task.model"),
   TokenBlacklist: require("./tokenBlackList.model"),
   Message: require("./message.model"),
+  SystemConfig: require("./systemConfig.model"),
 };

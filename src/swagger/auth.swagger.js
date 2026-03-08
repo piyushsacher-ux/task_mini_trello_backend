@@ -165,14 +165,83 @@
  *                 success:
  *                   type: boolean
  *                   example: true
- *                 token:
- *                   type: string
- *                   description: JWT to be used as Bearer token
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 tokens:
+ *                   type: object
+ *                   properties:
+ *                     access:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                           example: "access_token_jwt..."
+ *                         expiresAt:
+ *                           type: string
+ *                           format: date-time
+ *                     refresh:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                           example: "refresh_token_jwt..."
+ *                         expiresAt:
+ *                           type: string
+ *                           format: date-time
  *       400:
  *         description: Validation error
  *       401:
  *         description: Invalid credentials or user not verified
+ *
+ * /auth/refresh-tokens:
+ *   post:
+ *     summary: Refresh auth tokens
+ *     description: Exchange a valid refresh token (stored in the User model) for a new set of access and refresh tokens.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "refresh_token_jwt..."
+ *     responses:
+ *       200:
+ *         description: Tokens refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 tokens:
+ *                   type: object
+ *                   properties:
+ *                     access:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                         expiresAt:
+ *                           type: string
+ *                           format: date-time
+ *                     refresh:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                         expiresAt:
+ *                           type: string
+ *                           format: date-time
+ *       401:
+ *         description: Invalid or expired refresh token
+ *       404:
+ *         description: Refresh token not found
  */
 
 /**

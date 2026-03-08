@@ -153,5 +153,13 @@ module.exports = {
   NO_CHANGES_DETECTED: {
     message: "No changes detected in the update",
     statusCode: StatusCodes.BAD_REQUEST,
-  }
+  },
+  REFRESH_TOKEN_NOT_FOUND: {
+    message: "Refresh token not found",
+    statusCode: StatusCodes.NOT_FOUND,
+  },
+  REFRESH_TOKEN_EXPIRED: {
+    message: "Refresh token expired",
+    statusCode: StatusCodes.UNAUTHORIZED,
+  },
 };

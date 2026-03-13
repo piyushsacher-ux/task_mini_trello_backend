@@ -1,4 +1,5 @@
-require("dotenv").config();
+const env = process.env.NODE_ENV || "development";
+require("dotenv").config({ path: `.env.${env}` });
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
@@ -11,6 +12,7 @@ const registerChatSocket = require("./socket").registerChatSocket;
 const { runMigrations } = require("./migrations/migrationRunner");
 
 const { logger } = require("./utils");
+const { initCrons } = require("./utils/cron");
 const morgan = require("morgan");
 
 const rateLimiter = require("./middleware").rateLimiter;
@@ -42,6 +44,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await runMigrations();
+    initCrons();
     const server = http.createServer(app);
     const io = new Server(server, {
       cors: {

@@ -1,4 +1,5 @@
 const winston = require("winston");
+require("winston-daily-rotate-file");
 const path = require("path");
 
 const levels = {
@@ -35,12 +36,18 @@ const format = winston.format.combine(
 
 const transports = [
     new winston.transports.Console(),
-    new winston.transports.File({
-        filename: path.join(__dirname, "../../logs/error.log"),
+    new winston.transports.DailyRotateFile({
+        filename: path.join(__dirname, "../../logs/error-%DATE%.log"),
+        datePattern: "YYYY-MM-DD",
+        zippedArchive: true,
+        maxSize: "20m",
         level: "error",
     }),
-    new winston.transports.File({
-        filename: path.join(__dirname, "../../logs/all.log"),
+    new winston.transports.DailyRotateFile({
+        filename: path.join(__dirname, "../../logs/all-%DATE%.log"),
+        datePattern: "YYYY-MM-DD",
+        zippedArchive: true,
+        maxSize: "20m",
     }),
 ];
 
